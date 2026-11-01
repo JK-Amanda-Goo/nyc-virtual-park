@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { Entrance, ParkData } from './types';
 import { World } from './World';
 import { CameraRig } from './CameraRig';
 import { Entrances } from './Entrances';
+import { Character } from './Character';
+import { makePlayer } from './player';
 import { theme } from './theme';
 
 export function App() {
   const [data, setData] = useState<ParkData | null>(null);
   const [entrance, setEntrance] = useState<Entrance | null>(null);
+  const player = useRef(makePlayer());
   useEffect(() => { fetch('/park.json').then((r) => r.json()).then(setData); }, []);
   if (!data) return <div style={{ padding: 24 }}>Loading park…</div>;
 
@@ -21,12 +24,13 @@ export function App() {
         <directionalLight position={[300, 600, 200]} intensity={1.6} />
         <World data={data} />
         {!entrance && <Entrances items={data.entrances} onPick={setEntrance} />}
-        <CameraRig data={data} entrance={entrance} />
+        {entrance && <Character player={player} />}
+        <CameraRig data={data} entrance={entrance} player={player} />
       </Canvas>
       <div style={overlay}>
         {entrance ? (
           <>
-            WASD / arrows to move, Shift to run, drag to look.{' '}
+            WASD to move, Shift to run, drag to orbit the camera, scroll to zoom.{' '}
             <button onClick={() => setEntrance(null)}>Back to map</button>
           </>
         ) : 'Central Park: pick an entrance'}

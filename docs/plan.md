@@ -6,7 +6,7 @@ Each milestone is playable on its own.
 |---|------|-----------|
 | M0 (done) | Data pipeline | Script fetches OSM for the park and outputs one compact bundle (paths, grass, water, woods, bridges, trees, boundary buildings, entrance candidates) |
 | M1 (done) | Static world | Stylized park renders; bird's-eye view with clickable entrances; transition to eye level (R3 to R5) |
-| M2 | Single-player character | Walk, run, third-person back view with orbit camera, sit, lie down (R6, R7) |
+| M2 (partly done) | Single-player character | Walk, run, third-person back view with orbit camera (done, placeholder figure); sit and lie down (todo) (R6, R7) |
 | M3 | Auth + character setup | Sign up/in, face color, clothes, nickname saved to profile (R1, R2) |
 | M4 | Multiplayer + HUD | See other players move; live "N in the park" (R10) |
 | M5 | Blankets | Grab with daily cap and color, lay out, get back, server-enforced (R8, R9) |

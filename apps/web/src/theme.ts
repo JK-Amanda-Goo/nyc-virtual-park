@@ -15,6 +15,9 @@ export const theme = {
   skyline: '#c9c6c0',
   trunk: '#7b5b3b',
   leaf: '#4f8a49',
+  skin: '#e8b98f',
+  shirt: '#4a7fc1',
+  pants: '#3b3f4a',
   marker: '#ff5a4f',
   markerHover: '#ffd23f',
 };
