@@ -2,7 +2,7 @@
 
 A multiplayer 3D place where people sign up and spend time in random areas of New York City. **v1 is Central Park.**
 
-> Status: **research and planning. No application code yet.** See [`docs/research.md`](docs/research.md) for findings and [`docs/plan.md`](docs/plan.md) for the minimal-scope build plan.
+> Status: **M0 (data pipeline) and M1 (static world, map to eye-level) done, with placeholder colors.** Next: M2 (character). See [`docs/research.md`](docs/research.md) for findings and [`docs/plan.md`](docs/plan.md) for the minimal-scope build plan.
 
 ## Vision
 
@@ -53,11 +53,21 @@ Short version (details in the research doc): Google's Maps/3D Tiles are an **API
 5. Static client hosting starts on Cloudflare Pages (free), and we can move later.
 6. Sign-up starts with email (one-time code via Supabase Auth plus a bot check). Google sign-in can be added later.
 
-## Repo layout (planned)
+## Run it
+
+```
+node data/scripts/fetch-osm.mjs   # download raw OSM data (needs internet, about 1 min)
+node data/scripts/build-park.mjs  # write apps/web/public/park.json
+cd apps/web && npm install && npm run dev
+```
+
+`park.json` is committed, so you can skip the first two steps.
+
+## Repo layout
 
 ```
 docs/        research and plan
-apps/web/    client (not created yet)
+apps/web/    client (M1: map, entrances, eye-level walk)
 apps/server/ realtime server (not created yet)
-data/        OSM extract and build script (not created yet)
+data/scripts/ OSM fetch and build scripts
 ```

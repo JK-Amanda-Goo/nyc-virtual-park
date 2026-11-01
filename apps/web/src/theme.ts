@@ -1,0 +1,20 @@
+// Placeholder palette. Replace with the real design guide later.
+export const theme = {
+  sky: '#cfe3f2',
+  city: '#b9b9b3',
+  park: '#9cc58a',
+  grass: '#a9d097',
+  wood: '#6f9e63',
+  water: '#7fb6d9',
+  path: '#e4dcc8',
+  road: '#8f8f8f',
+  pitch: '#d5a77c',
+  playground: '#e6b0b0',
+  garden: '#c7a8d6',
+  building: '#d9d3cb',
+  skyline: '#c9c6c0',
+  trunk: '#7b5b3b',
+  leaf: '#4f8a49',
+  marker: '#ff5a4f',
+  markerHover: '#ffd23f',
+};
