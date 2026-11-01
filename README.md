@@ -44,13 +44,17 @@ Rationale, alternatives, costs, and risks are in [`docs/research.md`](docs/resea
 
 Short version (details in the research doc): Google's Maps/3D Tiles are an **API, not an LLM**, so choosing a model doesn't change how the map data gets in. For building this, use **one strong coding model for the code** and consider **Gemini only for generating textures/concept art** if wanted. No LLM is needed at runtime in v1.
 
+## Decisions
+
+1. Daily blanket reset is midnight `America/Los_Angeles` (PT, follows daylight saving).
+2. Laid-out blankets are shared world objects visible to everyone. v1 is one shared world; sharding into multiple servers comes later as demand grows.
+3. Capacity target: about 200 concurrent users in one session. Cost estimate in [`docs/cost.md`](docs/cost.md).
+4. Sign-up starts with email (one-time code via Supabase Auth plus a bot check). Google sign-in can be added later.
+
 ## Open questions
 
-1. "PST" reset: use fixed PST (UTC-8 all year) or `America/Los_Angeles` (PST/PDT, shifts in summer)? Plan assumes `America/Los_Angeles` midnight.
-2. Is a blanket a laid-out object that other players see and can sit on? Plan assumes yes, visible to all.
-3. Does a grab count when taken, or only when laid out? Plan assumes each "grab" counts, picking it back up does not refund.
-4. Target concurrent users for launch, which sets room sizing and cost.
-5. Sign-up method: email magic link, Google sign-in, or both.
+1. Does a grab count when taken, or only when laid out? Plan assumes each grab counts and picking a blanket back up does not refund it.
+2. Where to host the static client (Vercel Pro vs a free static host); see the cost doc.
 
 ## Repo layout (planned)
 
