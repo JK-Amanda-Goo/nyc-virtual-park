@@ -9,7 +9,9 @@ Verified on the vendors' pages today:
 - Vercel: Hobby $0 but personal and non-commercial only; Pro $20 with 1 TB bandwidth.
 - Colyseus Cloud: from $15 (specs per tier not published on the page); self-hosting the open-source version is free.
 
-Not checked (from memory, confirm before relying): the custom email (SMTP) provider's free tier of a few thousand emails per month, a domain at about $12 per year, and free static hosts such as Cloudflare Pages.
+Cloudflare Pages (verified): free plan allows 500 builds/month, 20,000 files per site, 25 MiB per file; requests to static assets are free and unlimited. The page doesn't state bandwidth or commercial-use terms; check Cloudflare's plans page before launch.
+
+Not checked (from memory, confirm before relying): the custom email (SMTP) provider's free tier of a few thousand emails per month, and a domain at about $12 per year.
 
 ## Bandwidth model (my estimate, to be confirmed by a load test)
 Server sends each client a snapshot of the other players at 10 Hz. Assuming about 16 bytes per player per snapshot:
@@ -22,9 +24,9 @@ Server sends each client a snapshot of the other players at 10 Hz. Assuming abou
 | Supabase | $0 (free) | $25 (Pro) | $25 |
 | Game server (Fly) | $4 to $7 | $13 to $33 | $33 (maybe 2 machines, about $66) |
 | Server bandwidth | about $0 | $1 to $5 | $55 (with interest mgmt) to $360 (without) |
-| Static client hosting | $0 | $0 to $20 | $20 |
+| Static client hosting (Cloudflare Pages) | $0 | $0 | $0 |
 | Email (SMTP) + domain | $1 | $1 to $10 | $10 to $20 |
-| **Total** | **about $5 to $10** | **about $45 to $95** | **about $150 to $500** |
+| **Total** | **about $5 to $10** | **about $40 to $75** | **about $130 to $480** |
 
 "Busy" assumes 200 people online around the clock, which is far beyond what a new product sees. It is the ceiling for the one-world design, not the expected bill.
 
