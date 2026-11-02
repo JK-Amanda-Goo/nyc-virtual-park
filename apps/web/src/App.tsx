@@ -34,7 +34,7 @@ export function App() {
       <div style={overlay}>
         {entrance ? (
           <>
-            WASD to move, Shift to run, drag to orbit the camera, scroll to zoom.{' '}
+            WASD move, Shift run, C sit, X lie down, drag to orbit, scroll to zoom.{' '}
             <button onClick={() => setEntrance(null)}>Back to map</button>
           </>
         ) : 'Central Park: pick an entrance'}

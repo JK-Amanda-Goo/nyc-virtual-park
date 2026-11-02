@@ -2,12 +2,11 @@ import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Entrance, ParkData } from './types';
-import type { PlayerState } from './player';
+import { LOOK_Y, type PlayerState } from './player';
 import type { Terrain } from './terrain';
 
 const FLIGHT_SECONDS = 3;
 const WALK = 1.4, RUN = 4.2;
-const HEAD = 1.4; // height the third-person camera looks at
 
 type Orbit = { yaw: number; pitch: number; dist: number };
 type Pose = { pos: THREE.Vector3; quat: THREE.Quaternion };
@@ -56,10 +55,10 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
   const orbitPose = (out: Pose) => {
     const p = player.current!, o = orbit.current;
     const cp = Math.cos(o.pitch);
-    out.pos.set(p.x + Math.sin(o.yaw) * cp * o.dist, p.y + HEAD + Math.sin(o.pitch) * o.dist, p.z + Math.cos(o.yaw) * cp * o.dist);
+    out.pos.set(p.x + Math.sin(o.yaw) * cp * o.dist, p.y + p.lookY + Math.sin(o.pitch) * o.dist, p.z + Math.cos(o.yaw) * cp * o.dist);
     const pr = probe.current;
     pr.position.copy(out.pos);
-    pr.lookAt(p.x, p.y + HEAD, p.z);
+    pr.lookAt(p.x, p.y + p.lookY, p.z);
     out.quat.copy(pr.quaternion);
   };
 
@@ -82,13 +81,22 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
     p.y = terrain.heightAt(p.x, p.z);
     p.heading = Math.atan2(-inward.x, -inward.z);
     p.speed = 0;
+    p.pose = 'stand';
+    p.lookY = LOOK_Y.stand;
     orbit.current = { yaw: p.heading, pitch: 0.3, dist: 5 };
     orbitPose(f.to);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entrance, cam, terrain]);
 
   useEffect(() => {
-    const down = (e: KeyboardEvent) => keys.current.add(e.code);
+    const down = (e: KeyboardEvent) => {
+      keys.current.add(e.code);
+      const p = player.current;
+      if (e.repeat || mode.current !== 'walk' || !p) return;
+      // C sits, X lies down; pressing the same key again stands up.
+      if (e.code === 'KeyC') p.pose = p.pose === 'sit' ? 'stand' : 'sit';
+      if (e.code === 'KeyX') p.pose = p.pose === 'lie' ? 'stand' : 'lie';
+    };
     const up = (e: KeyboardEvent) => keys.current.delete(e.code);
     let dragging = false;
     const md = () => { dragging = true; };
@@ -138,6 +146,7 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
     let mx = fx * fwd - fz * side, mz = fz * fwd + fx * side; // right = (-fz, fx)
     const len = Math.hypot(mx, mz);
     if (len > 0) {
+      p.pose = 'stand'; // moving gets you up
       mx /= len; mz /= len;
       const speed = run ? RUN : WALK;
       p.x += mx * speed * dt;
@@ -152,6 +161,7 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
     } else {
       p.speed = 0;
     }
+    p.lookY += (LOOK_Y[p.pose] - p.lookY) * Math.min(1, dt * 6);
     const pose = makePose();
     orbitPose(pose);
     cam.position.copy(pose.pos);
