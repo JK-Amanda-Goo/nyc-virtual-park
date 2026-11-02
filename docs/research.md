@@ -62,3 +62,27 @@ Search results were thin and mostly vendor or SEO pages, so treat these as leads
 - Overpass (queried directly, 2026-11-01): https://overpass-api.de/api/interpreter
 - Cloudflare Durable Objects pricing: https://developers.cloudflare.com/durable-objects/platform/pricing
 - Quaternius Universal Animation Library and Shyr Base Character: found via https://app.cinevva.com/guides/free-character-animations-rigging (vendor guide, verify licenses at source)
+
+## 7. Fidelity audit and authoritative sources (2026-11-02)
+
+Principle: every real-world element must come from an authoritative source and carry a verified/unverified tag (see README, "Fidelity policy").
+
+| Element | Current state | Authoritative source found |
+|---|---|---|
+| Park boundary | 4-corner approximation | NYC Open Data "Parks Properties" (`enfh-gkve`, NYC Parks): Central Park is `gispropnum=M010`, Flagship Park, 840.01 acres, polygon in the `multipolygon` column. Verified by querying the API. |
+| Terrain | Flat (wrong; the park has hills) | NYC Topobathymetric LiDAR DEM 2017, 1 m, served by NY State (`elevation.its.ny.gov/.../NYC_TopoBathymetric_2017_1_meter/ImageServer`). Also USGS 3DEP ImageServer. |
+| Entrances | 74 auto-generated candidates (not real) | Conservancy: 20 original named gates, 19 exist today (Fisherman's never built; Explorers' renamed Pioneers'). OSM has about 10 of them with coordinates. The rest need locating. Unnamed pedestrian entrances: no authoritative count found. |
+| Trees | 1,607 from OSM | Not resolved; NYC Parks has a street-tree census but it covers street trees, so check whether park trees are included. |
+| Building heights | Default 12 m when untagged | Not resolved; NYC building footprints dataset has heights. |
+
+Elevation spot check (metres, two independent services agree to within about 0.4 m, values plausible):
+
+| Point | USGS 3DEP | NYC 1 m DEM |
+|---|---|---|
+| Belvedere Castle | 41.0 | 40.6 |
+| The Pond (SE) | 9.2 | 9.2 |
+| Reservoir surface | 33.9 | 34.0 |
+| Harlem Meer | 14.9 | 15.2 |
+| Great Hill | 37.0 | 37.0 |
+
+Google Maps: there is no public per-gate dataset we can use. Maps Platform APIs need a billing account, and we haven't read the Places terms. Use Google Maps by eye as a cross-check only.
