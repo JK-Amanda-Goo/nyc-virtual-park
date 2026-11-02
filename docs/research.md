@@ -109,3 +109,22 @@ Open items:
 - **Warriors' Gate:** the Conservancy page says "Seventh Avenue and 100th Street", which cannot be on the park edge; placed at 110th Street (Central Park North). Looks like a typo on their page; worth confirming.
 - **Gate of the Exonerated:** the page gives "Fifth Avenue and Malcolm X Boulevard", two avenues blocks apart. Not placed.
 - Names with no OSM node (14 of 20) have not been compared against imagery.
+
+## 9. Gate check against the Conservancy's map pins (2026-11-02)
+
+The Conservancy page has an interactive map with a numbered pin per gate. I read the pin positions from screenshots, fitted scale and offset on four gates that OSM also maps (3.59 m per screenshot pixel), and compared every pin with the position derived from street junctions. Reading error is about 10 m. Raw numbers: `data/gate-pins.json`.
+
+Result: 13 gates agree with a second source and are marked verified.
+- Within 20 m of their pin: Artists', Artisans', Women's, Hunters', Boys', Strangers', Warriors', Woodman's, plus the four OSM-anchored gates (Mariners', All Saints, Girls', Engineers').
+- Pioneers': placed from its pin; an OSM gate node is within 15 m of it.
+
+Not verified (7):
+| Gate | Why |
+|---|---|
+| Scholars' | derived position is 34 m from its pin |
+| Miners', Children's, Inventors' | 21 to 32 m from their pins, all along Fifth Avenue and all in the same direction (pins are further north); suggests a systematic offset, cause not found |
+| Farmers' | placed from its pin; the OSM gate node is 28 m away, so the two sources disagree |
+| Gate of the Exonerated | placed from its pin only (the street description is ambiguous) |
+| Merchants' | its pin was cut off at the map edge and was not measured |
+
+Warriors' Gate: the pin sits on the north edge of the park, which supports reading "100th Street" on the Conservancy page as a typo for 110th.

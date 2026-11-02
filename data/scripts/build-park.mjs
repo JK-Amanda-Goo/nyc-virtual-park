@@ -81,18 +81,26 @@ for (const e of inside) {
   }
 }
 
-// Entrances: the Conservancy's named gates. Position = where the two named streets meet, snapped to the official boundary.
-// "verified" means that position and an OSM-mapped gate node agree within 15 m (two independent sources).
-// Gates without a street junction fall back to the OSM gate node alone (unverified). Gates with neither are left out.
+// Entrances: the Conservancy's 20 named gates, placed by the best source available for each:
+//  1. street junction (the two named streets meet), snapped to the official boundary; or
+//  2. the Conservancy's own map pin, measured from screenshots (data/gate-pins.json), where the junction method fails.
+// "verified" = two independent sources agree: junction vs an OSM-mapped gate node within 15 m, or junction vs the map pin within 20 m
+// (pin reading error is about 10 m). Gates placed from a pin are verified only if an OSM gate node is within 15 m of it.
 const osmGates = gates.map((g) => ({ name: g.tags.name, lat: g.lat, lon: g.lon }));
 const norm = (n) => n.replace(/[’']/g, '').replace(/s? Gate$/i, '').toLowerCase();
+const pins = JSON.parse(await readFile(new URL('../gate-pins.json', import.meta.url)));
+const metres = (a, b) => Math.hypot((a.lon - b.lon) * MLON, (a.lat - b.lat) * MLAT);
 const located = locateGates(inside, osmGates);
 const skipped = [];
 for (const g of located) {
   const osm = osmGates.find((o) => norm(o.name) === norm(g.name));
+  const pin = pins.pinPositions[g.name];
   let at = null, src = '', verified = false;
-  if (g.status === 'derived') { at = { lat: g.lat, lon: g.lon }; src = 'conservancy-streets'; verified = g.osmDistance !== null && g.osmDistance <= 15; }
-  else if (osm) { at = osm; src = 'osm-node'; }
+  if (pin) { at = pin; src = 'conservancy-pin'; verified = !!osm && metres(osm, pin) <= 15; }
+  else if (g.status === 'derived') {
+    at = { lat: g.lat, lon: g.lon }; src = 'conservancy-streets';
+    verified = (g.osmDistance !== null && g.osmDistance <= 15) || (pins.pinDiffMetres[g.name] ?? 99) <= 20;
+  } else if (osm) { at = osm; src = 'osm-node'; }
   if (!at) { skipped.push(g.name); continue; }
   const [x, z] = proj(at);
   world.entrances.push({ id: `g${world.entrances.length}`, name: g.name, x, z, src, verified, ...(g.note && { note: g.note }) });

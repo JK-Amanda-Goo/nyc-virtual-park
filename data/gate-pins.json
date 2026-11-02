@@ -1,0 +1,39 @@
+{
+ "measured": "2026-11-02",
+ "method": "Pin number centres read from screenshots of the Conservancy gates map; scale and offset fitted on 4 gates that OSM also maps (Mariners, All Saints, Girls, Engineers). Reading error about 10 m.",
+ "scaleMetresPerPx": 3.59,
+ "pinDiffMetres": {
+  "Scholars' Gate": 34,
+  "Artists' Gate": 15,
+  "Artisans' Gate": 19,
+  "Women's Gate": 16,
+  "Hunters' Gate": 15,
+  "Mariners' Gate": 4,
+  "Gate of All Saints": 7,
+  "Boys' Gate": 4,
+  "Strangers' Gate": 5,
+  "Warriors' Gate": 6,
+  "Farmers' Gate": 27,
+  "Pioneers' Gate": 22,
+  "Girls' Gate": 6,
+  "Engineers' Gate": 2,
+  "Miners' Gate": 28,
+  "Children's Gate": 32,
+  "Inventors' Gate": 21,
+  "Woodman's Gate": 15
+ },
+ "pinPositions": {
+  "Farmers' Gate": {
+   "lat": 40.798161,
+   "lon": -73.952728
+  },
+  "Pioneers' Gate": {
+   "lat": 40.796712,
+   "lon": -73.949835
+  },
+  "Gate of the Exonerated": {
+   "lat": 40.797485,
+   "lon": -73.950898
+  }
+ }
+}

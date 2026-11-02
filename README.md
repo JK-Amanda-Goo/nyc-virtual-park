@@ -49,7 +49,7 @@ The product is visiting a real place, so real-world elements must come from an a
 | Boundary | NYC Parks "Parks Properties" (M010) | official |
 | Terrain | NYC 1 m LiDAR DEM (2017) | official, 8 m grid in the client |
 | Paths, roads, lawns, water, woods, buildings | OpenStreetMap | community data, not yet audited |
-| Gates | Conservancy list of 20 named gates + OSM streets + official boundary | 19 placed, 4 verified (two sources agree within 15 m), 15 unverified; Gate of the Exonerated not placed |
+| Gates | Conservancy list of 20 named gates; positions from OSM street junctions and the Conservancy's map pins | 20 placed, 13 verified against a second source, 7 unverified (see docs/research.md section 9) |
 
 ## Which LLM for what
 

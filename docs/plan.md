@@ -26,7 +26,7 @@ Design guide, answers to the open questions in the README, and the launch concur
 Official boundary, LiDAR terrain (map texture and walking height), 6 OSM-named gates replace the 74 auto-generated entrances.
 
 ## Known gaps
-- 19 of 20 gates placed; only 4 verified (see research.md section 8). Exonerated Gate not placed; Warriors' Gate location rests on assuming a typo on the Conservancy page.
+- 20 of 20 gates placed; 13 verified, 7 not (see research.md section 9).
 - Bridges and tunnels sit on the terrain surface (no height separation).
 - Tree count (OSM) is far below reality; building heights default to 12 m when untagged.
 
