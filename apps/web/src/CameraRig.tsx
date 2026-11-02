@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { Entrance, ParkData } from './types';
 import type { PlayerState } from './player';
+import type { Terrain } from './terrain';
 
 const FLIGHT_SECONDS = 3;
 const WALK = 1.4, RUN = 4.2;
@@ -12,7 +13,7 @@ type Orbit = { yaw: number; pitch: number; dist: number };
 type Pose = { pos: THREE.Vector3; quat: THREE.Quaternion };
 const makePose = (): Pose => ({ pos: new THREE.Vector3(), quat: new THREE.Quaternion() });
 
-export function CameraRig({ data, entrance, player }: { data: ParkData; entrance: Entrance | null; player: React.RefObject<PlayerState> }) {
+export function CameraRig({ data, entrance, player, terrain }: { data: ParkData; entrance: Entrance | null; player: React.RefObject<PlayerState>; terrain: Terrain }) {
   const { camera, gl, size } = useThree();
   const cam = camera as THREE.PerspectiveCamera;
   const probe = useRef(new THREE.PerspectiveCamera()); // cameras aim down -Z, unlike plain objects
@@ -20,16 +21,25 @@ export function CameraRig({ data, entrance, player }: { data: ParkData; entrance
   // Map pose: straight down, with the park's long axis pointing up the screen.
   const mapPose = useRef(makePose());
   useEffect(() => {
-    const [sw, se, ne, nw] = data.boundary;
-    const south = [(sw[0] + se[0]) / 2, (sw[1] + se[1]) / 2], north = [(ne[0] + nw[0]) / 2, (ne[1] + nw[1]) / 2];
-    const axis = new THREE.Vector3(north[0] - south[0], 0, north[1] - south[1]).normalize();
-    const lengthM = Math.hypot(north[0] - south[0], north[1] - south[1]) * 1.12;
+    // Long axis of the official outline (principal component of the largest part), oriented northward.
+    const ring = data.boundary.reduce((m, r) => (r.length > m.length ? r : m));
+    const mx = ring.reduce((a, p) => a + p[0], 0) / ring.length, mz = ring.reduce((a, p) => a + p[1], 0) / ring.length;
+    let cxx = 0, czz = 0, cxz = 0;
+    for (const [x, z] of ring) { cxx += (x - mx) ** 2; czz += (z - mz) ** 2; cxz += (x - mx) * (z - mz); }
+    const theta = 0.5 * Math.atan2(2 * cxz, cxx - czz);
+    const axis = new THREE.Vector3(Math.cos(theta), 0, Math.sin(theta));
+    if (axis.z > 0) axis.negate();
+    const across = new THREE.Vector3(-axis.z, 0, axis.x);
+    const along = ring.map(([x, z]) => x * axis.x + z * axis.z), side = ring.map(([x, z]) => x * across.x + z * across.z);
+    const [a0, a1, s0, s1] = [Math.min(...along), Math.max(...along), Math.min(...side), Math.max(...side)];
+    const center = axis.clone().multiplyScalar((a0 + a1) / 2).addScaledVector(across, (s0 + s1) / 2);
+    const lengthM = (a1 - a0) * 1.12, widthM = (s1 - s0) * 1.4;
     const t = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
-    const h = Math.max(lengthM / (2 * t), 1300 / (2 * t * (size.width / size.height)));
+    const h = Math.max(lengthM / (2 * t), widthM / (2 * t * (size.width / size.height)));
     const pr = probe.current;
     pr.up.copy(axis);
-    pr.position.set(0, h, 0);
-    pr.lookAt(0, 0, 0);
+    pr.position.set(center.x, h, center.z);
+    pr.lookAt(center.x, 0, center.z);
     mapPose.current.pos.copy(pr.position);
     mapPose.current.quat.copy(pr.quaternion);
     pr.up.set(0, 1, 0);
@@ -46,10 +56,10 @@ export function CameraRig({ data, entrance, player }: { data: ParkData; entrance
   const orbitPose = (out: Pose) => {
     const p = player.current!, o = orbit.current;
     const cp = Math.cos(o.pitch);
-    out.pos.set(p.x + Math.sin(o.yaw) * cp * o.dist, HEAD + Math.sin(o.pitch) * o.dist, p.z + Math.cos(o.yaw) * cp * o.dist);
+    out.pos.set(p.x + Math.sin(o.yaw) * cp * o.dist, p.y + HEAD + Math.sin(o.pitch) * o.dist, p.z + Math.cos(o.yaw) * cp * o.dist);
     const pr = probe.current;
     pr.position.copy(out.pos);
-    pr.lookAt(p.x, HEAD, p.z);
+    pr.lookAt(p.x, p.y + HEAD, p.z);
     out.quat.copy(pr.quaternion);
   };
 
@@ -69,12 +79,13 @@ export function CameraRig({ data, entrance, player }: { data: ParkData; entrance
     const p = player.current!;
     p.x = entrance.x + inward.x * 6;
     p.z = entrance.z + inward.z * 6;
+    p.y = terrain.heightAt(p.x, p.z);
     p.heading = Math.atan2(-inward.x, -inward.z);
     p.speed = 0;
     orbit.current = { yaw: p.heading, pitch: 0.3, dist: 5 };
     orbitPose(f.to);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entrance, cam]);
+  }, [entrance, cam, terrain]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => keys.current.add(e.code);
@@ -132,6 +143,7 @@ export function CameraRig({ data, entrance, player }: { data: ParkData; entrance
       p.x += mx * speed * dt;
       p.z += mz * speed * dt;
       p.speed = speed;
+      p.y = terrain.heightAt(p.x, p.z);
       // Turn the body toward the movement direction by the shortest arc.
       const target = Math.atan2(-mx, -mz);
       let d = target - p.heading;

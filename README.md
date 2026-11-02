@@ -40,6 +40,17 @@ Chat, voice, friends, other NYC areas, mobile apps, avatar marketplace, photorea
 
 Rationale, alternatives, costs, and risks are in [`docs/research.md`](docs/research.md).
 
+## Fidelity policy
+
+The product is visiting a real place, so real-world elements must come from an authoritative source and be tagged with where they came from and whether they are verified. Nothing is placed by guess. Current sources:
+
+| Element | Source | Status |
+|---|---|---|
+| Boundary | NYC Parks "Parks Properties" (M010) | official |
+| Terrain | NYC 1 m LiDAR DEM (2017) | official, 8 m grid in the client |
+| Paths, roads, lawns, water, woods, buildings | OpenStreetMap | community data, not yet audited |
+| Gates | OpenStreetMap, official names only | 6 of 19 found, all unverified; the rest still to locate |
+
 ## Which LLM for what
 
 Short version (details in the research doc): Google's Maps/3D Tiles are an **API, not an LLM**, so choosing a model doesn't change how the map data gets in. For building this, use **one strong coding model for the code** and consider **Gemini only for generating textures/concept art** if wanted. No LLM is needed at runtime in v1.
@@ -56,12 +67,14 @@ Short version (details in the research doc): Google's Maps/3D Tiles are an **API
 ## Run it
 
 ```
-node data/scripts/fetch-osm.mjs   # download raw OSM data (needs internet, about 1 min)
-node data/scripts/build-park.mjs  # write apps/web/public/park.json
+node data/scripts/fetch-boundary.mjs  # official boundary
+node data/scripts/fetch-terrain.mjs   # LiDAR elevation
+node data/scripts/fetch-osm.mjs       # OSM features and gates (about 1 min)
+node data/scripts/build-park.mjs      # write apps/web/public/park.json and terrain.bin
 cd apps/web && npm install && npm run dev
 ```
 
-`park.json` is committed, so you can skip the first two steps.
+`park.json` and `terrain.bin` are committed, so you can skip the fetch steps.
 
 ## Repo layout
 

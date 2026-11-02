@@ -22,7 +22,15 @@ M1 and M2 can run before any backend exists. M3 to M5 need the server.
 ## Waiting on the owner
 Design guide, answers to the open questions in the README, and the launch concurrency target.
 
-## Known gaps after M1
+## Fidelity work (2026-11-02, done)
+Official boundary, LiDAR terrain (map texture and walking height), 6 OSM-named gates replace the 74 auto-generated entrances.
+
+## Known gaps
+- 13 of the 19 official gates are not yet located; none of the 6 placed gates is verified against the Conservancy map.
+- Bridges and tunnels sit on the terrain surface (no height separation).
+- Tree count (OSM) is far below reality; building heights default to 12 m when untagged.
+
+## Older gaps (before the fidelity work)
 - 74 entrance candidates (every path crossing the outline), unnamed; needs curating to the real gates.
 - The park outline is a 4-corner approximation, so edge entrances can be off by tens of metres.
 - OSM has only 1,607 trees (the real park has far more); paths are flat ribbons with no collision.

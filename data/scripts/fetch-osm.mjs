@@ -1,28 +1,22 @@
-// Downloads raw OSM data for Central Park (geometry included) into data/raw/.
-// OSM has no single "Central Park" boundary (it is split into many relations),
-// so we use the park's outline: 59th St to 110th St, 5th Ave to Central Park West.
+// Downloads raw OSM data (with geometry) for the area around the official boundary into data/raw/.
 import { mkdir, writeFile } from 'node:fs/promises';
-import { BOUNDARY } from './boundary.mjs';
+import { WIDE } from './boundary.mjs';
 
 const ENDPOINT = 'https://overpass-api.de/api/interpreter';
-const poly = BOUNDARY.map(([lat, lon]) => `${lat} ${lon}`).join(' ');
-// A wider ring (~250 m) used only for skyline buildings.
-const EDGE = [[40.7638, -73.9838], [40.7632, -73.9713], [40.7985, -73.9475], [40.8017, -73.9592]];
-const edgePoly = EDGE.map(([lat, lon]) => `${lat} ${lon}`).join(' ');
-const P = `(poly:"${poly}")`;
+const B = `(${WIDE.minLat},${WIDE.minLon},${WIDE.maxLat},${WIDE.maxLon})`;
+const GATE_NAMES = ["Mariner's Gate", 'Gate of All Saints', 'Pioneers Gate', 'Farmers Gate', "Engineers' Gate", "Girls' Gate", "Boys' Gate", "Women's Gate", "Children's Gate", "Strangers' Gate", "Artists' Gate", "Artisans' Gate", "Merchants' Gate", "Scholars' Gate", 'Warriors Gate', "Warriors' Gate", 'Hunters Gate', "Hunters' Gate", 'Woodmans Gate', "Woodman's Gate", 'Miners Gate', "Miners' Gate", 'Inventors Gate', "Inventors' Gate", 'Cultivators Gate', "Cultivators' Gate", "Explorers' Gate"];
 
 const queries = {
   inside: `[out:json][timeout:180];(
-    way${P}["highway"];
-    way${P}["landuse"~"grass|meadow"];
-    way${P}["natural"~"grassland|water|wood|scrub"];
-    way${P}["leisure"~"pitch|playground|garden"];
-    way${P}["waterway"];
-    way${P}["building"];
-    rel${P}["natural"="water"];
-    node${P}["natural"="tree"];
+    way${B}["highway"~"footway|path|pedestrian|steps|cycleway|track|service|residential|tertiary|secondary|primary|unclassified|living_street"];
+    way${B}["landuse"~"grass|meadow"];
+    way${B}["natural"~"grassland|water|wood|scrub"];
+    way${B}["leisure"~"pitch|playground|garden"];
+    way${B}["building"];
+    rel${B}["natural"="water"];
+    node${B}["natural"="tree"];
   );out geom;`,
-  edge: `[out:json][timeout:180];way(poly:"${edgePoly}")["building"];out geom;`,
+  gates: `[out:json][timeout:60];node${B}[name~"^(${GATE_NAMES.map((n) => n.replace(/[()]/g, '')).join('|')})$"];out;`,
 };
 
 await mkdir(new URL('../raw/', import.meta.url), { recursive: true });

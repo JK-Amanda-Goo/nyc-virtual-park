@@ -16,7 +16,7 @@ export function Character({ player, colors = theme }: { player: React.RefObject<
   useFrame((_, dt) => {
     const p = player.current;
     if (!root.current || !p) return;
-    root.current.position.set(p.x, 0, p.z);
+    root.current.position.set(p.x, p.y, p.z);
     root.current.rotation.y = p.heading;
     const moving = p.speed > 0.05;
     phase.current += dt * (p.speed > 2.5 ? 12 : 8) * (moving ? 1 : 0);
