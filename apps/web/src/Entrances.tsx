@@ -20,9 +20,9 @@ export function Entrances({ items, terrain, onPick }: { items: Entrance[]; terra
             <cylinderGeometry args={[22, 22, 40, 16]} />
             <meshBasicMaterial color={hover === e.id ? theme.markerHover : theme.marker} />
           </mesh>
-          <Html position={[0, 60, 0]} center style={{ pointerEvents: 'none', whiteSpace: 'nowrap', fontSize: 12, background: 'rgba(255,255,255,.9)', padding: '2px 6px', borderRadius: 4 }}>
-            {e.name}{e.verified ? '' : ' (unverified)'}
-          </Html>
+          {hover === e.id && <Html position={[0, 60, 0]} center style={{ pointerEvents: 'none', whiteSpace: 'nowrap', fontSize: 12, background: 'rgba(255,255,255,.9)', padding: '2px 6px', borderRadius: 4 }}>
+            {e.name}{e.verified ? ' ✓' : ' (unverified)'}
+          </Html>}
         </group>
       ))}
     </group>

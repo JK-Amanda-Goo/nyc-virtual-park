@@ -3,6 +3,7 @@
 //   apps/web/public/terrain.bin ground height grid, Int16 little-endian, centimetres
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { PARTS, BBOX, WIDE } from './boundary.mjs';
+import { locateGates } from './locate-gates.mjs';
 
 const read = async (n) => JSON.parse(await readFile(new URL(`../raw/${n}.json`, import.meta.url))).elements;
 const [inside, gates] = [await read('inside'), await read('gates')];
@@ -80,11 +81,23 @@ for (const e of inside) {
   }
 }
 
-// Entrances: only gates that OSM names. Unverified until checked against the Conservancy map.
-world.entrances = gates.map((g, i) => {
-  const [x, z] = proj(g);
-  return { id: `g${i}`, name: g.tags.name, x, z, src: 'osm', verified: false };
-});
+// Entrances: the Conservancy's named gates. Position = where the two named streets meet, snapped to the official boundary.
+// "verified" means that position and an OSM-mapped gate node agree within 15 m (two independent sources).
+// Gates without a street junction fall back to the OSM gate node alone (unverified). Gates with neither are left out.
+const osmGates = gates.map((g) => ({ name: g.tags.name, lat: g.lat, lon: g.lon }));
+const norm = (n) => n.replace(/[’']/g, '').replace(/s? Gate$/i, '').toLowerCase();
+const located = locateGates(inside, osmGates);
+const skipped = [];
+for (const g of located) {
+  const osm = osmGates.find((o) => norm(o.name) === norm(g.name));
+  let at = null, src = '', verified = false;
+  if (g.status === 'derived') { at = { lat: g.lat, lon: g.lon }; src = 'conservancy-streets'; verified = g.osmDistance !== null && g.osmDistance <= 15; }
+  else if (osm) { at = osm; src = 'osm-node'; }
+  if (!at) { skipped.push(g.name); continue; }
+  const [x, z] = proj(at);
+  world.entrances.push({ id: `g${world.entrances.length}`, name: g.name, x, z, src, verified, ...(g.note && { note: g.note }) });
+}
+console.log('gates placed', world.entrances.length, 'verified', world.entrances.filter((e) => e.verified).length, 'not placed:', skipped.join(', '));
 
 // Terrain: resample the lat/lon raster onto a regular local-metre grid.
 const tif = await readFile(new URL('../raw/dem.tif', import.meta.url));
@@ -145,4 +158,4 @@ await writeFile(new URL('terrain.bin', dir), Buffer.from(grid.buffer));
 await writeFile(new URL('park.json', dir), JSON.stringify(world));
 console.log('park.json', (JSON.stringify(world).length / 1e6).toFixed(2), 'MB; terrain.bin', (grid.byteLength / 1e6).toFixed(2), 'MB');
 for (const [key, v] of Object.entries(world)) if (Array.isArray(v)) console.log(key.padEnd(12), v.length);
-console.log(world.entrances.map((e) => e.name).join(', '));
+

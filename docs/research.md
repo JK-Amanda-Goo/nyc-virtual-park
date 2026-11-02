@@ -86,3 +86,26 @@ Elevation spot check (metres, two independent services agree to within about 0.4
 | Great Hill | 37.0 | 37.0 |
 
 Google Maps: there is no public per-gate dataset we can use. Maps Platform APIs need a billing account, and we haven't read the Places terms. Use Google Maps by eye as a cross-check only.
+
+## 8. Gates (2026-11-02)
+
+Source: the Conservancy's own named-gates page lists **20 gates** with the cross streets where each stands (https://www.centralparknyc.org/named-gates). This is newer than their "Portals in Time" article (which said 19 existing); the page now includes Gate of the Exonerated and Merchants' Gate Plaza.
+
+Method (`data/scripts/gates.mjs`, `locate-gates.mjs`): find the OSM junction of the two named streets, then snap it to the nearest point on the official boundary. Accuracy is about 15 to 25 m (the junction sits across the street from the park edge).
+
+Cross-check against OSM-mapped gate nodes, where they exist:
+
+| Gate | Distance between the two |
+|---|---|
+| Mariners' | 2 m |
+| Girls' | 2 m |
+| Engineers' | 2 m |
+| Gate of All Saints | 12 m |
+
+Those four are marked verified. Others are derived but not cross-checked.
+
+Open items:
+- **Farmers' and Pioneers' Gates:** no street junction found (the streets join at a traffic circle or under a different name), so they use the OSM gate node alone. Pioneers' differs from the street-junction method by 25 m.
+- **Warriors' Gate:** the Conservancy page says "Seventh Avenue and 100th Street", which cannot be on the park edge; placed at 110th Street (Central Park North). Looks like a typo on their page; worth confirming.
+- **Gate of the Exonerated:** the page gives "Fifth Avenue and Malcolm X Boulevard", two avenues blocks apart. Not placed.
+- Names with no OSM node (14 of 20) have not been compared against imagery.
