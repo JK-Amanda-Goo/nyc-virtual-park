@@ -52,7 +52,7 @@ export function App() {
         <directionalLight position={[300, 600, 200]} intensity={1.6} />
         <World data={data} terrain={terrain} />
         {!entrance && <Entrances items={data.entrances} terrain={terrain} onPick={setEntrance} />}
-        {entrance && <Character player={player} nickname={profile.nickname} colors={{ skin: profile.skin, shirt: profile.top, pants: profile.bottom }} />}
+        {entrance && <Character player={player} nickname={profile.nickname} colors={{ skin: profile.skin, shirt: profile.top, pants: theme.pants }} />}
         {entrance && <Blanket blanket={blanket} player={player} terrain={terrain} onPhase={(phase) => setBl((s) => ({ ...s, phase }))} />}
         <CameraRig data={data} entrance={entrance} player={player} terrain={terrain} />
       </Canvas>

@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Character } from './Character';
+import { theme } from './theme';
 import { makePlayer, type PlayerState } from './player';
 import {
-  BOTTOM_COLORS, DEFAULT_PROFILE, NICKNAME_MAX, NICKNAME_MIN, SKIN_TONES, TOP_COLORS,
+  DEFAULT_PROFILE, NEON_SKIN, NICKNAME_MAX, NICKNAME_MIN, SKIN_TONES, TOP_COLORS,
   cleanNickname, validNickname, type Profile,
 } from './profile';
 
@@ -39,7 +40,7 @@ export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | 
         <Canvas camera={{ position: [0, 1.2, 3.6], fov: 32 }} onCreated={({ camera }) => camera.lookAt(0, 0.95, 0)}>
           <ambientLight intensity={1.2} />
           <directionalLight position={[2, 4, 3]} intensity={1.6} />
-          <Character player={preview} colors={{ skin: p.skin, shirt: p.top, pants: p.bottom }} />
+          <Character player={preview} colors={{ skin: p.skin, shirt: p.top, pants: theme.pants }} />
           <Turntable player={preview} />
         </Canvas>
       </div>
@@ -50,9 +51,8 @@ export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | 
           <span>Nickname</span>
           <input value={p.nickname} onChange={(e) => set({ nickname: e.target.value })} maxLength={NICKNAME_MAX * 2} autoFocus placeholder={`${NICKNAME_MIN}-${NICKNAME_MAX} characters`} style={{ padding: '6px 8px', fontSize: 14 }} />
         </label>
-        <Swatches label="Skin" colors={SKIN_TONES} value={p.skin} onChange={(skin) => set({ skin })} />
+        <Swatches label="Skin" colors={[...SKIN_TONES, ...NEON_SKIN]} value={p.skin} onChange={(skin) => set({ skin })} />
         <Swatches label="Top" colors={TOP_COLORS} value={p.top} onChange={(top) => set({ top })} />
-        <Swatches label="Bottom" colors={BOTTOM_COLORS} value={p.bottom} onChange={(bottom) => set({ bottom })} />
         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
           <button type="submit" disabled={!ok} style={{ padding: '8px 16px', fontSize: 15 }}>{initial ? 'Save' : 'Enter the park'}</button>
           {onCancel && <button type="button" onClick={onCancel} style={{ padding: '8px 16px', fontSize: 15 }}>Cancel</button>}
