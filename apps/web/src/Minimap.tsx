@@ -10,6 +10,7 @@ const FULL_H = 380; // CSS pixels tall, whole-park view
 const FULL_MARGIN_M = 150;
 const RADIUS_M = 150; // default metres from the player to the edge of the map
 const MIN_RADIUS_M = 50, MAX_RADIUS_M = 800, ZOOM_STEP = 1.6;
+const MAX_FULL_ZOOM = 8; // whole-park view: 1 = the entire park
 const MAX_BASE_PX = 25e6; // keep the prebuilt map image a sane size
 
 /** Round top-down map around the player; the camera's view direction is always up. */
@@ -17,8 +18,13 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
   const ref = useRef<HTMLCanvasElement>(null);
   const full = useRef(false);
   const radius = useRef(RADIUS_M);
+  const fullZoom = useRef(1);
   const zoomBox = useRef<HTMLDivElement>(null);
-  const zoom = (f: number) => { radius.current = Math.min(MAX_RADIUS_M, Math.max(MIN_RADIUS_M, radius.current * f)); };
+  // f > 1 zooms out, f < 1 zooms in, for whichever view is showing.
+  const zoom = (f: number) => {
+    if (full.current) fullZoom.current = Math.min(MAX_FULL_ZOOM, Math.max(1, fullZoom.current / f));
+    else radius.current = Math.min(MAX_RADIUS_M, Math.max(MIN_RADIUS_M, radius.current * f));
+  };
 
   // One image for the whole park, drawn once: land use, then roads and paths on top.
   const base = useMemo(() => {
@@ -59,7 +65,7 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       const w = f ? fullW : SIZE, h = f ? FULL_H : SIZE;
       cv.style.width = w + 'px'; cv.style.height = h + 'px';
       cv.style.borderRadius = f ? '10px' : '50%';
-      if (zoomBox.current) zoomBox.current.style.display = f ? 'none' : 'flex';
+      if (zoomBox.current) zoomBox.current.style.left = w + 30 + 'px';
       cv.width = w * dpr; cv.height = h * dpr;
     };
     const onKey = (e: KeyboardEvent) => { if (e.code === 'KeyM' && !e.repeat) { full.current = !full.current; layout(); } };
@@ -112,15 +118,18 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     };
 
     const drawFull = (p: PlayerState) => {
-      const { c, s } = base, k = cv.width / bounds.w; // device pixels per metre
+      const { c, s } = base, fz = fullZoom.current, w = bounds.w / fz, h = bounds.h / fz, k = cv.width / w; // k: device pixels per metre
+      // Zoomed in, the window follows the player but never leaves the park's extent.
+      const x0 = Math.min(bounds.x0 + bounds.w - w, Math.max(bounds.x0, p.x - w / 2));
+      const z0 = Math.min(bounds.z0 + bounds.h - h, Math.max(bounds.z0, p.z - h / 2));
       g.fillStyle = theme.city; g.fillRect(0, 0, cv.width, cv.height);
-      g.drawImage(c, (bounds.x0 - terrain.minX) * s, (bounds.z0 - terrain.minZ) * s, bounds.w * s, bounds.h * s, 0, 0, cv.width, cv.height);
+      g.drawImage(c, (x0 - terrain.minX) * s, (z0 - terrain.minZ) * s, w * s, h * s, 0, 0, cv.width, cv.height);
       g.save();
-      g.translate(-bounds.x0 * k, -bounds.z0 * k);
+      g.translate(-x0 * k, -z0 * k);
       dots((e) => [e.x * k, e.z * k], Infinity);
       g.restore();
       // North is up here, so the arrow turns by the character's heading alone.
-      arrow((p.x - bounds.x0) * k, (p.z - bounds.z0) * k, -p.heading);
+      arrow((p.x - x0) * k, (p.z - z0) * k, -p.heading);
       g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'left'; g.textBaseline = 'top';
       g.fillText('N ↑', 8 * dpr, 6 * dpr);
     };
