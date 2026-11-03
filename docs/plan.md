@@ -10,7 +10,8 @@ Each milestone is playable on its own.
 | M2.5 (done) | Minimap | Round top-down map in walk mode: view direction up, arrow for you, gate dots, N on the rim |
 | M3 | Auth + character setup | Sign up/in, face color, clothes, nickname saved to profile (R1, R2) |
 | M4 | Multiplayer + HUD | See other players move; live "N in the park" (R10) |
-| M5 | Blankets | Grab with daily cap and color, lay out, get back, server-enforced (R8, R9) |
+| M5a (done) | Blanket, client only | Pick a colour, grab, lay out with a drop-and-unfold animation, get back; no server, no daily cap, not shared |
+| M5b | Blankets, server side | Daily cap of 100 (Los Angeles day), laid-out blankets shared with everyone, server-enforced (R8, R9) |
 | M6 | Harden | Nickname filter, disconnect cleanup, load test, deploy |
 
 M1 and M2 can run before any backend exists. M3 to M5 need the server.

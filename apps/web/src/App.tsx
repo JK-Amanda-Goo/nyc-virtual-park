@@ -7,6 +7,9 @@ import { Entrances } from './Entrances';
 import { Terrain } from './terrain';
 import { Character } from './Character';
 import { Minimap } from './Minimap';
+import { Blanket } from './Blanket';
+import { BlanketPanel } from './BlanketPanel';
+import { makeBlanket, type BlanketPhase } from './blanketState';
 import { makePlayer } from './player';
 import { theme } from './theme';
 
@@ -15,6 +18,18 @@ export function App() {
   const [entrance, setEntrance] = useState<Entrance | null>(null);
   const [terrain, setTerrain] = useState<Terrain | null>(null);
   const player = useRef(makePlayer());
+  const blanket = useRef(makeBlanket());
+  const [bl, setBl] = useState<{ phase: BlanketPhase; color: string }>({ phase: 'none', color: blanket.current.color });
+  const setPhase = (phase: BlanketPhase) => { blanket.current.phase = phase; setBl((s) => ({ ...s, phase })); };
+  const grab = () => setPhase('held');
+  const putAway = () => setPhase('none');
+  const lay = () => {
+    const b = blanket.current, p = player.current;
+    Object.assign(b, { x: p.x, y: p.y, z: p.z, heading: p.heading, t: 0, version: b.version + 1 });
+    setPhase('laying');
+  };
+  const getBack = () => { blanket.current.t = 0; setPhase('folding'); };
+  const setColor = (color: string) => { blanket.current.color = color; setBl((s) => ({ ...s, color })); };
   useEffect(() => {
     fetch('/park.json').then((r) => r.json()).then(async (d: ParkData) => { setTerrain(await Terrain.load(d.terrain)); setData(d); });
   }, []);
@@ -30,9 +45,11 @@ export function App() {
         <World data={data} terrain={terrain} />
         {!entrance && <Entrances items={data.entrances} terrain={terrain} onPick={setEntrance} />}
         {entrance && <Character player={player} />}
+        {entrance && <Blanket blanket={blanket} player={player} terrain={terrain} onPhase={(phase) => setBl((s) => ({ ...s, phase }))} />}
         <CameraRig data={data} entrance={entrance} player={player} terrain={terrain} />
       </Canvas>
       {entrance && <Minimap data={data} terrain={terrain} player={player} />}
+      {entrance && <BlanketPanel phase={bl.phase} color={bl.color} onColor={setColor} onGrab={grab} onLay={lay} onGetBack={getBack} onPutAway={putAway} />}
       <div style={overlay}>
         {entrance ? (
           <>
