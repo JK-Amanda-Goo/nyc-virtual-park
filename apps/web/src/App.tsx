@@ -6,6 +6,7 @@ import { CameraRig } from './CameraRig';
 import { Entrances } from './Entrances';
 import { Terrain } from './terrain';
 import { Character } from './Character';
+import { Minimap } from './Minimap';
 import { makePlayer } from './player';
 import { theme } from './theme';
 
@@ -31,6 +32,7 @@ export function App() {
         {entrance && <Character player={player} />}
         <CameraRig data={data} entrance={entrance} player={player} terrain={terrain} />
       </Canvas>
+      {entrance && <Minimap data={data} terrain={terrain} player={player} />}
       <div style={overlay}>
         {entrance ? (
           <>

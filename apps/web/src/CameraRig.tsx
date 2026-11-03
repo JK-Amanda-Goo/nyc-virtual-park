@@ -121,6 +121,7 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
 
   useFrame((_, dt) => {
     const f = flight.current;
+    if (player.current) player.current.walking = false;
     if (mode.current === 'map') {
       cam.position.copy(mapPose.current.pos);
       cam.quaternion.copy(mapPose.current.quat);
@@ -136,6 +137,7 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
     }
 
     const k = keys.current, o = orbit.current, p = player.current!;
+    p.walking = true;
     o.yaw += ((k.has('ArrowLeft') ? 1 : 0) - (k.has('ArrowRight') ? 1 : 0)) * 1.8 * dt;
     const fwd = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
     const side = (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0);
@@ -161,6 +163,7 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
     } else {
       p.speed = 0;
     }
+    p.view = o.yaw;
     p.lookY += (LOOK_Y[p.pose] - p.lookY) * Math.min(1, dt * 6);
     const pose = makePose();
     orbitPose(pose);
