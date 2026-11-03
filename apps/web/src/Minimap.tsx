@@ -5,26 +5,18 @@ import type { Terrain } from './terrain';
 import { paintGround } from './groundTexture';
 import { theme } from './theme';
 
-const SIZE = 180; // CSS pixels, local view
-const FULL_H = 380; // CSS pixels tall, whole-park view
-const FULL_MARGIN_M = 150;
-const RADIUS_M = 150; // default metres from the player to the edge of the map
-const MIN_RADIUS_M = 50, MAX_RADIUS_M = 800, ZOOM_STEP = 1.6;
-const MAX_FULL_ZOOM = 8; // whole-park view: 1 = the entire park
+const HEIGHT = 380; // CSS pixels tall
+const MARGIN_M = 150; // around the official boundary
+const ZOOM_STEP = 1.6, MAX_ZOOM = 8; // zoom 1 = the entire park
 const MAX_BASE_PX = 25e6; // keep the prebuilt map image a sane size
 
-/** Round top-down map around the player; the camera's view direction is always up. */
+/** North-up map of the park with you on it. Zoomed in, it follows you. */
 export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Terrain; player: React.RefObject<PlayerState> }) {
   const ref = useRef<HTMLCanvasElement>(null);
-  const full = useRef(false);
-  const radius = useRef(RADIUS_M);
-  const fullZoom = useRef(1);
+  const level = useRef(1);
   const zoomBox = useRef<HTMLDivElement>(null);
-  // f > 1 zooms out, f < 1 zooms in, for whichever view is showing.
-  const zoom = (f: number) => {
-    if (full.current) fullZoom.current = Math.min(MAX_FULL_ZOOM, Math.max(1, fullZoom.current / f));
-    else radius.current = Math.min(MAX_RADIUS_M, Math.max(MIN_RADIUS_M, radius.current * f));
-  };
+  // f > 1 zooms out, f < 1 zooms in.
+  const zoom = (f: number) => { level.current = Math.min(MAX_ZOOM, Math.max(1, level.current / f)); };
 
   // One image for the whole park, drawn once: land use, then roads and paths on top.
   const base = useMemo(() => {
@@ -44,12 +36,12 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     return { c, s };
   }, [data, terrain]);
 
-  // Whole park, north up: the official boundary's extent plus a margin.
+  // The official boundary's extent plus a margin.
   const bounds = useMemo(() => {
     const pts = data.boundary.flat();
     const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
-    const x0 = Math.min(...xs) - FULL_MARGIN_M, x1 = Math.max(...xs) + FULL_MARGIN_M;
-    const z0 = Math.min(...zs) - FULL_MARGIN_M, z1 = Math.max(...zs) + FULL_MARGIN_M;
+    const x0 = Math.min(...xs) - MARGIN_M, x1 = Math.max(...xs) + MARGIN_M;
+    const z0 = Math.min(...zs) - MARGIN_M, z1 = Math.max(...zs) + MARGIN_M;
     return { x0, z0, w: x1 - x0, h: z1 - z0 };
   }, [data]);
 
@@ -57,22 +49,11 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     const cv = ref.current!;
     const dpr = window.devicePixelRatio || 1;
     const g = cv.getContext('2d')!;
-    const fullW = Math.round(FULL_H * bounds.w / bounds.h);
+    const width = Math.round(HEIGHT * bounds.w / bounds.h);
     let raf = 0, last = 0, shown = false;
-
-    const layout = () => {
-      const f = full.current;
-      const w = f ? fullW : SIZE, h = f ? FULL_H : SIZE;
-      cv.style.width = w + 'px'; cv.style.height = h + 'px';
-      cv.style.borderRadius = f ? '10px' : '50%';
-      if (zoomBox.current) zoomBox.current.style.left = w + 30 + 'px';
-      cv.width = w * dpr; cv.height = h * dpr;
-    };
-    const onKey = (e: KeyboardEvent) => { if (e.code === 'KeyM' && !e.repeat) { full.current = !full.current; layout(); } };
-    const onClick = () => { full.current = !full.current; layout(); };
-    window.addEventListener('keydown', onKey);
-    cv.addEventListener('click', onClick);
-    layout();
+    cv.style.width = width + 'px'; cv.style.height = HEIGHT + 'px';
+    cv.width = width * dpr; cv.height = HEIGHT * dpr;
+    if (zoomBox.current) zoomBox.current.style.left = width + 30 + 'px';
 
     const arrow = (x: number, y: number, angle: number) => {
       g.save();
@@ -92,33 +73,8 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       }
     };
 
-    const drawLocal = (p: PlayerState) => {
-      const R = radius.current, half = cv.width / 2, k = half / R; // device pixels per metre
-      const { c, s } = base;
-      g.save();
-      g.beginPath(); g.arc(half, half, half, 0, Math.PI * 2); g.clip();
-      g.fillStyle = theme.city; g.fillRect(0, 0, cv.width, cv.height);
-      // World x east, z south; rotating by the camera yaw puts the view direction at the top.
-      g.translate(half, half);
-      g.rotate(p.view);
-      g.drawImage(c, (p.x - terrain.minX - R) * s, (p.z - terrain.minZ - R) * s, 2 * R * s, 2 * R * s,
-        -R * k, -R * k, 2 * R * k, 2 * R * k);
-      dots((e) => [(e.x - p.x) * k, (e.z - p.z) * k], half);
-      g.restore();
-
-      // You: an arrow pointing the way your character faces, relative to the view.
-      arrow(half, half, p.view - p.heading);
-
-      // Where real north is on the rim.
-      const r = half - 11 * dpr, nx = half + Math.sin(p.view) * r, ny = half - Math.cos(p.view) * r;
-      g.fillStyle = 'rgba(255,255,255,.9)';
-      g.beginPath(); g.arc(nx, ny, 8 * dpr, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#222'; g.font = `bold ${11 * dpr}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText('N', nx, ny + dpr * 0.5);
-    };
-
-    const drawFull = (p: PlayerState) => {
-      const { c, s } = base, fz = fullZoom.current, w = bounds.w / fz, h = bounds.h / fz, k = cv.width / w; // k: device pixels per metre
+    const drawMap = (p: PlayerState) => {
+      const { c, s } = base, fz = level.current, w = bounds.w / fz, h = bounds.h / fz, k = cv.width / w; // k: device pixels per metre
       // Zoomed in, the window follows the player but never leaves the park's extent.
       const x0 = Math.min(bounds.x0 + bounds.w - w, Math.max(bounds.x0, p.x - w / 2));
       const z0 = Math.min(bounds.z0 + bounds.h - h, Math.max(bounds.z0, p.z - h / 2));
@@ -128,7 +84,7 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       g.translate(-x0 * k, -z0 * k);
       dots((e) => [e.x * k, e.z * k], Infinity);
       g.restore();
-      // North is up here, so the arrow turns by the character's heading alone.
+      // North is up, so the arrow turns by the character's heading alone.
       arrow((p.x - x0) * k, (p.z - z0) * k, -p.heading);
       g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'left'; g.textBaseline = 'top';
       g.fillText('N ↑', 8 * dpr, 6 * dpr);
@@ -142,21 +98,17 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       if (p.walking !== shown) { shown = p.walking; cv.style.visibility = shown ? 'visible' : 'hidden'; if (zoomBox.current) zoomBox.current.style.visibility = shown ? 'visible' : 'hidden'; }
       if (!p.walking) return;
       g.clearRect(0, 0, cv.width, cv.height);
-      if (full.current) drawFull(p); else drawLocal(p);
+      drawMap(p);
     };
     raf = requestAnimationFrame(draw);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('keydown', onKey);
-      cv.removeEventListener('click', onClick);
-    };
+    return () => cancelAnimationFrame(raf);
   }, [base, bounds, data, terrain, player]);
 
   const btn: React.CSSProperties = { width: 32, height: 32, border: 'none', borderRadius: 6, background: 'rgba(255,255,255,.9)', boxShadow: '0 1px 4px rgba(0,0,0,.3)', fontSize: 20, lineHeight: '30px', cursor: 'pointer', padding: 0 };
   return (
     <>
-      <canvas ref={ref} style={{ position: 'absolute', left: 16, bottom: 16, width: SIZE, height: SIZE, borderRadius: '50%', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,.3)', visibility: 'hidden', cursor: 'pointer' }} title="Click or press M: whole park" />
-      <div ref={zoomBox} style={{ position: 'absolute', left: SIZE + 30, bottom: 16, display: 'flex', flexDirection: 'column', gap: 6, visibility: 'hidden' }}>
+      <canvas ref={ref} style={{ position: 'absolute', left: 16, bottom: 16, borderRadius: 10, border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,.3)', visibility: 'hidden' }} />
+      <div ref={zoomBox} style={{ position: 'absolute', left: 200, bottom: 16, display: 'flex', flexDirection: 'column', gap: 6, visibility: 'hidden' }}>
         <button style={btn} onClick={() => zoom(1 / ZOOM_STEP)} title="Zoom the minimap in" aria-label="Zoom minimap in">+</button>
         <button style={btn} onClick={() => zoom(ZOOM_STEP)} title="Zoom the minimap out" aria-label="Zoom minimap out">−</button>
       </div>
