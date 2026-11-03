@@ -2,7 +2,7 @@
 
 A multiplayer 3D place where people sign up and spend time in random areas of New York City. **v1 is Central Park.**
 
-> Status: **M0 (data pipeline) and M1 (static world, map to eye-level) done, with placeholder colors.** Next: M2 (character). See [`docs/research.md`](docs/research.md) for findings and [`docs/plan.md`](docs/plan.md) for the minimal-scope build plan.
+> Status: **M0 to M2 done (data pipeline, map to eye level, character with sit and lie down), plus a minimap and a client-only blanket, all with placeholder colors.** Next: M3 (sign-up and character setup). See [`CHANGELOG.md`](CHANGELOG.md) for what changed, [`docs/research.md`](docs/research.md) for findings and [`docs/plan.md`](docs/plan.md) for the minimal-scope build plan.
 
 ## Vision
 
