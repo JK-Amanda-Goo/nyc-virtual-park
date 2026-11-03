@@ -128,3 +128,16 @@ Not verified (7):
 | Merchants' | its pin was cut off at the map edge and was not measured |
 
 Warriors' Gate: the pin sits on the north edge of the park, which supports reading "100th Street" on the Conservancy page as a typo for 110th.
+
+### Update 2026-11-03
+
+Re-checking the seven unverified gates showed that the 20 to 34 m offsets on the Fifth Avenue gates came from my method, not the gates. I had linked several screenshots together by panning the map, which drifted. Fitting each screenshot on its own:
+
+- Scholars' (15 m), Miners' (17 m), Children's (19 m), Inventors' (10 m) agree with their pins. A closer look at Scholars' (zoom 17) put the pin about 16 m from the 5th Ave and 60th St junction, on the park edge, as expected. These four are now verified.
+- Merchants' Gate: the street-junction method was 75 m off its pin (Columbus Circle is a large circle). It is now placed from its pin, unverified.
+- Farmers' and Exonerated: placed from their pins, re-measured within one view. Still single-source, unverified.
+- Pioneers': pin and OSM gate node are 12 m apart, so still verified.
+
+Result: 17 of 20 gates verified; Merchants', Farmers' and Exonerated rest on the Conservancy pin alone (about 10 m reading error).
+
+Still caveated: the Inventors' Gate at zoom 17 appeared to sit at the Terrace Drive entrance, about half a block from where I read 72nd Street from the labels, so its exact cross street is not certain by eye. The numeric check says 10 m.

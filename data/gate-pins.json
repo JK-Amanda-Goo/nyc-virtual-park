@@ -1,12 +1,12 @@
 {
- "measured": "2026-11-02",
- "method": "Pin number centres read from screenshots of the Conservancy gates map; scale and offset fitted on 4 gates that OSM also maps (Mariners, All Saints, Girls, Engineers). Reading error about 10 m.",
- "scaleMetresPerPx": 3.59,
+ "measured": "2026-11-03 (north end and south end re-measured within single views)",
+ "method": "Pin number centres read from screenshots of the Conservancy gates map (zoom 15, about 3.6 m per pixel). In each screenshot scale and offset were fitted on gates that are verified some other way, then the other pins compared. North end anchors: All Saints, Boys', Strangers', Warriors', Girls'. South end anchors: Artists', Artisans', Women's. Reading error about 10 m. Cross-screenshot linking was found to drift by 20 to 30 m, so only single-view fits are used.",
+ "scaleMetresPerPx": 3.58,
  "pinDiffMetres": {
-  "Scholars' Gate": 34,
-  "Artists' Gate": 15,
-  "Artisans' Gate": 19,
-  "Women's Gate": 16,
+  "Scholars' Gate": 15,
+  "Artists' Gate": 4,
+  "Artisans' Gate": 2,
+  "Women's Gate": 3,
   "Hunters' Gate": 15,
   "Mariners' Gate": 4,
   "Gate of All Saints": 7,
@@ -17,23 +17,27 @@
   "Pioneers' Gate": 22,
   "Girls' Gate": 6,
   "Engineers' Gate": 2,
-  "Miners' Gate": 28,
-  "Children's Gate": 32,
-  "Inventors' Gate": 21,
+  "Miners' Gate": 17,
+  "Children's Gate": 19,
+  "Inventors' Gate": 10,
   "Woodman's Gate": 15
  },
  "pinPositions": {
   "Farmers' Gate": {
-   "lat": 40.798161,
-   "lon": -73.952728
+   "lat": 40.798163,
+   "lon": -73.952771
   },
   "Pioneers' Gate": {
-   "lat": 40.796712,
-   "lon": -73.949835
+   "lat": 40.79672,
+   "lon": -73.949893
   },
   "Gate of the Exonerated": {
-   "lat": 40.797485,
-   "lon": -73.950898
+   "lat": 40.79749,
+   "lon": -73.950951
+  },
+  "Merchants' Gate": {
+   "lat": 40.768342,
+   "lon": -73.981223
   }
  }
 }
