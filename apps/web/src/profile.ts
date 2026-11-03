@@ -15,6 +15,26 @@ export const NICKNAME_MIN = 2, NICKNAME_MAX = 16;
 export const cleanNickname = (s: string) => s.replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim();
 export const validNickname = (s: string) => { const n = [...cleanNickname(s)].length; return n >= NICKNAME_MIN && n <= NICKNAME_MAX; };
 
+const ADJECTIVES = [
+  'Sleepy', 'Breezy', 'Mossy', 'Sunny', 'Cozy', 'Misty', 'Fuzzy', 'Gentle', 'Quiet', 'Lazy', 'Happy', 'Dusty', 'Rainy', 'Golden', 'Clever',
+  'Wobbly', 'Cheery', 'Sandy', 'Frosty', 'Humble', 'Jolly', 'Plucky', 'Snowy', 'Windy', 'Dreamy', 'Wild', 'Tiny', 'Brave', 'Mellow', 'Peachy',
+  'Rusty', 'Shady', 'Silky', 'Speedy', 'Sparkly', 'Velvet', 'Zesty', 'Dappled', 'Curious', 'Sunlit',
+];
+const NOUNS = [
+  'Otter', 'Fox', 'Hedgehog', 'Heron', 'Squirrel', 'Acorn', 'Maple', 'Pebble', 'Willow', 'Clover', 'Fern', 'Daisy', 'Robin', 'Sparrow', 'Turtle',
+  'Raccoon', 'Owl', 'Cricket', 'Moss', 'Breeze', 'Brook', 'Meadow', 'Pinecone', 'Ladybug', 'Firefly', 'Mushroom', 'Birch', 'Tulip', 'Badger',
+  'Rabbit', 'Falcon', 'Pond', 'Stone', 'Cloud', 'Petal', 'Blossom', 'Lichen', 'Thistle', 'Marmot', 'Dandelion',
+];
+const pick = <T,>(xs: T[]) => xs[Math.floor(Math.random() * xs.length)];
+
+/** A random "AdjectiveNoun" nickname from nature words, within the length limit. */
+export function suggestNickname(): string {
+  for (;;) {
+    const n = pick(ADJECTIVES) + pick(NOUNS);
+    if (n.length <= NICKNAME_MAX) return n;
+  }
+}
+
 const KEY = 'nyc-virtual-park:profile';
 
 export function loadProfile(): Profile | null {

@@ -5,7 +5,7 @@ import { theme } from './theme';
 import { makePlayer, type PlayerState } from './player';
 import {
   DEFAULT_PROFILE, NEON_SKIN, NICKNAME_MAX, NICKNAME_MIN, SKIN_TONES, TOP_COLORS,
-  cleanNickname, validNickname, type Profile,
+  cleanNickname, suggestNickname, validNickname, type Profile,
 } from './profile';
 
 function Turntable({ player }: { player: React.RefObject<PlayerState> }) {
@@ -32,7 +32,10 @@ function Swatches({ label, colors, value, onChange }: { label: string; colors: s
 export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | null; onDone: (p: Profile) => void; onCancel?: () => void }) {
   const [p, setP] = useState<Profile>(initial ?? DEFAULT_PROFILE);
   const preview = useRef(makePlayer());
-  const ok = validNickname(p.nickname);
+  const [suggestion, setSuggestion] = useState(suggestNickname);
+  // Left empty, the suggested nickname is used.
+  const nickname = cleanNickname(p.nickname) || suggestion;
+  const ok = validNickname(nickname);
   const set = (patch: Partial<Profile>) => setP((s) => ({ ...s, ...patch }));
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32, padding: 16, flexWrap: 'wrap', background: '#eef3f7' }}>
@@ -45,12 +48,16 @@ export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | 
         </Canvas>
       </div>
       <form style={{ display: 'flex', flexDirection: 'column', gap: 14, width: 340, fontSize: 14 }}
-        onSubmit={(e) => { e.preventDefault(); if (ok) onDone({ ...p, nickname: cleanNickname(p.nickname) }); }}>
+        onSubmit={(e) => { e.preventDefault(); if (ok) onDone({ ...p, nickname }); }}>
         <h2 style={{ margin: 0 }}>Your character</h2>
         <label style={{ display: 'grid', gridTemplateColumns: '70px 1fr', alignItems: 'center', gap: 8 }}>
           <span>Nickname</span>
-          <input value={p.nickname} onChange={(e) => set({ nickname: e.target.value })} maxLength={NICKNAME_MAX * 2} autoFocus placeholder={`${NICKNAME_MIN}-${NICKNAME_MAX} characters`} style={{ padding: '6px 8px', fontSize: 14 }} />
+          <span style={{ display: 'flex', gap: 6 }}>
+            <input value={p.nickname} onChange={(e) => set({ nickname: e.target.value })} maxLength={NICKNAME_MAX * 2} autoFocus placeholder={suggestion} style={{ padding: '6px 8px', fontSize: 14, flex: 1, minWidth: 0 }} />
+            <button type="button" onClick={() => setSuggestion(suggestNickname())} title="Another suggestion" aria-label="Another nickname suggestion" style={{ padding: '0 8px', fontSize: 16, cursor: 'pointer' }}>🎲</button>
+          </span>
         </label>
+        <small style={{ color: '#666', marginTop: -8, marginLeft: 78 }}>Leave it empty to use the suggestion. {NICKNAME_MIN}-{NICKNAME_MAX} characters.</small>
         <Swatches label="Skin" colors={[...SKIN_TONES, ...NEON_SKIN]} value={p.skin} onChange={(skin) => set({ skin })} />
         <Swatches label="Top" colors={TOP_COLORS} value={p.top} onChange={(top) => set({ top })} />
         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>

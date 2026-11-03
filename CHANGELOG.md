@@ -5,7 +5,7 @@ Newest first. Versions are pre-release (0.x) while the app is single-player and 
 ## [Unreleased] - 2026-11-03
 
 ### Added
-- Character setup screen (local only): nickname (2 to 16 characters), skin colour (6 natural tones plus 16 neon colours) and top colour, with a turning preview. Trousers are fixed. Saved in this browser, shown on the character in the park, with the nickname above its head; "Edit character" reopens it. Sign-up and saving to an account come with Supabase later (before multiplayer).
+- Character setup screen (local only): nickname (2 to 16 characters), skin colour (6 natural tones plus 16 neon colours) and top colour, with a turning preview. Trousers are fixed. The nickname field suggests a random nature-word nickname (e.g. FuzzyCricket) as its placeholder; leave it empty to use it, or press the dice for another. Saved in this browser, shown on the character in the park, with the nickname above its head; "Edit character" reopens it. Sign-up and saving to an account come with Supabase later (before multiplayer).
 - Blanket, client only (M5a): pick a colour, grab, lay out with a drop-and-unfold animation, get back, put away. No daily cap and not shared yet (M5b needs the server).
 - Minimap in walk mode: the park stands upright (long axis up), +/- zoom that follows you, a live wedge for the camera direction, an arrow for your character, gate dots (red verified, yellow unverified), and a tilted compass for real north.
 - Real building heights from NYC Building Footprints (11,268 footprints, 15 without a height drawn at 10 m).
