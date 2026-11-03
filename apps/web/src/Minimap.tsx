@@ -84,6 +84,10 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       g.translate(-x0 * k, -z0 * k);
       dots((e) => [e.x * k, e.z * k], Infinity);
       g.restore();
+      // The camera's field of view as a wedge, so turning the camera shows up live. North is up, so its angle is -view.
+      const px = (p.x - x0) * k, pz = (p.z - z0) * k, reach = 46 * dpr, half = 0.66; // about 76 degrees wide
+      g.fillStyle = 'rgba(43,102,217,.28)';
+      g.beginPath(); g.moveTo(px, pz); g.arc(px, pz, reach, -Math.PI / 2 - p.view - half, -Math.PI / 2 - p.view + half); g.closePath(); g.fill();
       // North is up, so the arrow turns by the character's heading alone.
       arrow((p.x - x0) * k, (p.z - z0) * k, -p.heading);
       g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'left'; g.textBaseline = 'top';
