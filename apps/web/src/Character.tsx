@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Html } from '@react-three/drei';
 import type { PlayerState } from './player';
 import { theme } from './theme';
 
@@ -11,7 +12,7 @@ const LIE_LIFT = 0.14; // half the torso depth, so the back rests on the ground
 const BLEND_RATE = 6; // pose transitions per second
 
 // Placeholder figure built from boxes. Forward is -Z.
-export function Character({ player, colors = theme }: { player: React.RefObject<PlayerState>; colors?: Colors }) {
+export function Character({ player, colors = theme, nickname }: { player: React.RefObject<PlayerState>; colors?: Colors; nickname?: string }) {
   const root = useRef<THREE.Group>(null);
   const rig = useRef<THREE.Group>(null);
   const legL = useRef<THREE.Group>(null), legR = useRef<THREE.Group>(null);
@@ -47,6 +48,11 @@ export function Character({ player, colors = theme }: { player: React.RefObject<
 
   return (
     <group ref={root}>
+      {nickname && (
+        <Html position={[0, 1.95, 0]} center style={{ pointerEvents: 'none', whiteSpace: 'nowrap' }}>
+          <div style={{ padding: '1px 8px', borderRadius: 10, background: 'rgba(255,255,255,.85)', fontSize: 12, fontWeight: 600 }}>{nickname}</div>
+        </Html>
+      )}
       <group ref={rig}>
         <group ref={legL} position={[-0.11, 0.8, 0]}>
           <mesh position={[0, -0.4, 0]}><boxGeometry args={[0.18, 0.8, 0.2]} /><meshLambertMaterial color={colors.pants} /></mesh>

@@ -8,7 +8,8 @@ Each milestone is playable on its own.
 | M1 (done) | Static world | Stylized park renders; bird's-eye view with clickable entrances; transition to eye level (R3 to R5) |
 | M2 (done) | Single-player character | Walk, run, third-person back view with orbit camera, sit (C), lie down (X); placeholder figure (R6, R7) |
 | M2.5 (done) | Minimap | Round top-down map in walk mode: view direction up, arrow for you, gate dots, N on the rim |
-| M3 | Auth + character setup | Sign up/in, face color, clothes, nickname saved to profile (R1, R2) |
+| M3a (done) | Character setup, local | Nickname, skin, top and bottom colours; saved in the browser; shown in the park (R2) |
+| M3b | Sign-up / sign-in | Email one-time code via Supabase; profile saved to the account (R1). Needed before multiplayer (M4) |
 | M4 | Multiplayer + HUD | See other players move; live "N in the park" (R10) |
 | M5a (done) | Blanket, client only | Pick a colour, grab, lay out with a drop-and-unfold animation, get back; no server, no daily cap, not shared |
 | M5b | Blankets, server side | Daily cap of 100 (Los Angeles day), laid-out blankets shared with everyone, server-enforced (R8, R9) |

@@ -12,12 +12,16 @@ import { BlanketPanel } from './BlanketPanel';
 import { makeBlanket, type BlanketPhase } from './blanketState';
 import { makePlayer } from './player';
 import { theme } from './theme';
+import { SetupScreen } from './SetupScreen';
+import { loadProfile, saveProfile, type Profile } from './profile';
 
 export function App() {
   const [data, setData] = useState<ParkData | null>(null);
   const [entrance, setEntrance] = useState<Entrance | null>(null);
   const [terrain, setTerrain] = useState<Terrain | null>(null);
   const player = useRef(makePlayer());
+  const [profile, setProfile] = useState<Profile | null>(loadProfile);
+  const [editing, setEditing] = useState(false);
   const blanket = useRef(makeBlanket());
   const [bl, setBl] = useState<{ phase: BlanketPhase; color: string }>({ phase: 'none', color: blanket.current.color });
   const setPhase = (phase: BlanketPhase) => { blanket.current.phase = phase; setBl((s) => ({ ...s, phase })); };
@@ -33,6 +37,10 @@ export function App() {
   useEffect(() => {
     fetch('/park.json').then((r) => r.json()).then(async (d: ParkData) => { setTerrain(await Terrain.load(d.terrain)); setData(d); });
   }, []);
+  if (!profile || editing) {
+    return <SetupScreen initial={profile} onCancel={profile ? () => setEditing(false) : undefined}
+      onDone={(p) => { saveProfile(p); setProfile(p); setEditing(false); }} />;
+  }
   if (!data || !terrain) return <div style={{ padding: 24 }}>Loading park…</div>;
 
   const overlay: React.CSSProperties = { position: 'absolute', top: 16, left: 16, padding: '8px 12px', background: 'rgba(255,255,255,.85)', borderRadius: 6, fontSize: 14 };
@@ -44,7 +52,7 @@ export function App() {
         <directionalLight position={[300, 600, 200]} intensity={1.6} />
         <World data={data} terrain={terrain} />
         {!entrance && <Entrances items={data.entrances} terrain={terrain} onPick={setEntrance} />}
-        {entrance && <Character player={player} />}
+        {entrance && <Character player={player} nickname={profile.nickname} colors={{ skin: profile.skin, shirt: profile.top, pants: profile.bottom }} />}
         {entrance && <Blanket blanket={blanket} player={player} terrain={terrain} onPhase={(phase) => setBl((s) => ({ ...s, phase }))} />}
         <CameraRig data={data} entrance={entrance} player={player} terrain={terrain} />
       </Canvas>
@@ -56,7 +64,8 @@ export function App() {
             WASD move, Shift run, C sit, X lie down, drag to orbit, scroll to zoom.{' '}
             <button onClick={() => setEntrance(null)}>Back to map</button>
           </>
-        ) : 'Central Park: pick an entrance'}
+        ) : 'Central Park: pick an entrance'}{' '}
+        <button onClick={() => setEditing(true)}>Edit character</button>
       </div>
     </>
   );
