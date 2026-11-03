@@ -5,13 +5,16 @@ import type { Terrain } from './terrain';
 import { paintGround } from './groundTexture';
 import { theme } from './theme';
 
-const SIZE = 180; // CSS pixels
+const SIZE = 180; // CSS pixels, local view
+const FULL_H = 380; // CSS pixels tall, whole-park view
+const FULL_MARGIN_M = 150;
 const RADIUS_M = 150; // metres from the player to the edge of the map
 const MAX_BASE_PX = 25e6; // keep the prebuilt map image a sane size
 
 /** Round top-down map around the player; the camera's view direction is always up. */
 export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Terrain; player: React.RefObject<PlayerState> }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const full = useRef(false);
 
   // One image for the whole park, drawn once: land use, then roads and paths on top.
   const base = useMemo(() => {
@@ -31,23 +34,56 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     return { c, s };
   }, [data, terrain]);
 
+  // Whole park, north up: the official boundary's extent plus a margin.
+  const bounds = useMemo(() => {
+    const pts = data.boundary.flat();
+    const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
+    const x0 = Math.min(...xs) - FULL_MARGIN_M, x1 = Math.max(...xs) + FULL_MARGIN_M;
+    const z0 = Math.min(...zs) - FULL_MARGIN_M, z1 = Math.max(...zs) + FULL_MARGIN_M;
+    return { x0, z0, w: x1 - x0, h: z1 - z0 };
+  }, [data]);
+
   useEffect(() => {
     const cv = ref.current!;
     const dpr = window.devicePixelRatio || 1;
-    cv.width = cv.height = SIZE * dpr;
     const g = cv.getContext('2d')!;
-    const half = SIZE * dpr / 2, k = half / RADIUS_M; // device pixels per metre
-    let raf = 0, last = 0;
+    const fullW = Math.round(FULL_H * bounds.w / bounds.h);
+    let raf = 0, last = 0, shown = false;
 
-    const draw = (now: number) => {
-      raf = requestAnimationFrame(draw);
-      const p = player.current;
-      if (!p || now - last < 33) return; // about 30 fps is plenty
-      last = now;
-      cv.style.visibility = p.walking ? 'visible' : 'hidden';
-      if (!p.walking) return;
+    const layout = () => {
+      const f = full.current;
+      const w = f ? fullW : SIZE, h = f ? FULL_H : SIZE;
+      cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      cv.style.borderRadius = f ? '10px' : '50%';
+      cv.width = w * dpr; cv.height = h * dpr;
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.code === 'KeyM' && !e.repeat) { full.current = !full.current; layout(); } };
+    const onClick = () => { full.current = !full.current; layout(); };
+    window.addEventListener('keydown', onKey);
+    cv.addEventListener('click', onClick);
+    layout();
+
+    const arrow = (x: number, y: number, angle: number) => {
+      g.save();
+      g.translate(x, y); g.rotate(angle);
+      g.fillStyle = '#2b66d9'; g.strokeStyle = '#fff'; g.lineWidth = 2 * dpr;
+      g.beginPath(); g.moveTo(0, -9 * dpr); g.lineTo(6 * dpr, 7 * dpr); g.lineTo(0, 3 * dpr); g.lineTo(-6 * dpr, 7 * dpr); g.closePath();
+      g.stroke(); g.fill();
+      g.restore();
+    };
+    const dots = (toXY: (e: { x: number; z: number }) => [number, number], maxR: number) => {
+      for (const e of data.entrances) {
+        const [dx, dz] = toXY(e);
+        if (Math.hypot(dx, dz) > maxR) continue;
+        g.fillStyle = e.verified ? theme.marker : theme.markerHover;
+        g.strokeStyle = '#fff'; g.lineWidth = 1.5 * dpr;
+        g.beginPath(); g.arc(dx, dz, 4 * dpr, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
+    };
+
+    const drawLocal = (p: PlayerState) => {
+      const half = cv.width / 2, k = half / RADIUS_M; // device pixels per metre
       const { c, s } = base;
-      g.clearRect(0, 0, cv.width, cv.height);
       g.save();
       g.beginPath(); g.arc(half, half, half, 0, Math.PI * 2); g.clip();
       g.fillStyle = theme.city; g.fillRect(0, 0, cv.width, cv.height);
@@ -56,34 +92,51 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       g.rotate(p.view);
       g.drawImage(c, (p.x - terrain.minX - RADIUS_M) * s, (p.z - terrain.minZ - RADIUS_M) * s, 2 * RADIUS_M * s, 2 * RADIUS_M * s,
         -RADIUS_M * k, -RADIUS_M * k, 2 * RADIUS_M * k, 2 * RADIUS_M * k);
-      for (const e of data.entrances) {
-        const dx = (e.x - p.x) * k, dz = (e.z - p.z) * k;
-        if (Math.hypot(dx, dz) > half) continue;
-        g.fillStyle = e.verified ? theme.marker : theme.markerHover;
-        g.strokeStyle = '#fff'; g.lineWidth = 1.5 * dpr;
-        g.beginPath(); g.arc(dx, dz, 4 * dpr, 0, Math.PI * 2); g.fill(); g.stroke();
-      }
+      dots((e) => [(e.x - p.x) * k, (e.z - p.z) * k], half);
       g.restore();
 
       // You: an arrow pointing the way your character faces, relative to the view.
-      g.save();
-      g.translate(half, half);
-      g.rotate(p.view - p.heading);
-      g.fillStyle = '#2b66d9'; g.strokeStyle = '#fff'; g.lineWidth = 2 * dpr;
-      g.beginPath(); g.moveTo(0, -9 * dpr); g.lineTo(6 * dpr, 7 * dpr); g.lineTo(0, 3 * dpr); g.lineTo(-6 * dpr, 7 * dpr); g.closePath();
-      g.stroke(); g.fill();
-      g.restore();
+      arrow(half, half, p.view - p.heading);
 
       // Where real north is on the rim.
-      const r = half - 11 * dpr;
+      const r = half - 11 * dpr, nx = half + Math.sin(p.view) * r, ny = half - Math.cos(p.view) * r;
       g.fillStyle = 'rgba(255,255,255,.9)';
-      g.beginPath(); g.arc(half + Math.sin(p.view) * r, half - Math.cos(p.view) * r, 8 * dpr, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.arc(nx, ny, 8 * dpr, 0, Math.PI * 2); g.fill();
       g.fillStyle = '#222'; g.font = `bold ${11 * dpr}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText('N', half + Math.sin(p.view) * r, half - Math.cos(p.view) * r + dpr * 0.5);
+      g.fillText('N', nx, ny + dpr * 0.5);
+    };
+
+    const drawFull = (p: PlayerState) => {
+      const { c, s } = base, k = cv.width / bounds.w; // device pixels per metre
+      g.fillStyle = theme.city; g.fillRect(0, 0, cv.width, cv.height);
+      g.drawImage(c, (bounds.x0 - terrain.minX) * s, (bounds.z0 - terrain.minZ) * s, bounds.w * s, bounds.h * s, 0, 0, cv.width, cv.height);
+      g.save();
+      g.translate(-bounds.x0 * k, -bounds.z0 * k);
+      dots((e) => [e.x * k, e.z * k], Infinity);
+      g.restore();
+      // North is up here, so the arrow turns by the character's heading alone.
+      arrow((p.x - bounds.x0) * k, (p.z - bounds.z0) * k, -p.heading);
+      g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'left'; g.textBaseline = 'top';
+      g.fillText('N ↑', 8 * dpr, 6 * dpr);
+    };
+
+    const draw = (now: number) => {
+      raf = requestAnimationFrame(draw);
+      const p = player.current;
+      if (!p || now - last < 33) return; // about 30 fps is plenty
+      last = now;
+      if (p.walking !== shown) { shown = p.walking; cv.style.visibility = shown ? 'visible' : 'hidden'; }
+      if (!p.walking) return;
+      g.clearRect(0, 0, cv.width, cv.height);
+      if (full.current) drawFull(p); else drawLocal(p);
     };
     raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
-  }, [base, data, terrain, player]);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKey);
+      cv.removeEventListener('click', onClick);
+    };
+  }, [base, bounds, data, terrain, player]);
 
-  return <canvas ref={ref} style={{ position: 'absolute', left: 16, bottom: 16, width: SIZE, height: SIZE, borderRadius: '50%', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,.3)', visibility: 'hidden' }} />;
+  return <canvas ref={ref} style={{ position: 'absolute', left: 16, bottom: 16, width: SIZE, height: SIZE, borderRadius: '50%', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,.3)', visibility: 'hidden', cursor: 'pointer' }} title="Click or press M: whole park" />;
 }
