@@ -7,6 +7,8 @@ import { locateGates } from './locate-gates.mjs';
 
 const read = async (n) => JSON.parse(await readFile(new URL(`../raw/${n}.json`, import.meta.url))).elements;
 const [inside, gates] = [await read('inside'), await read('gates')];
+const footprints = JSON.parse(await readFile(new URL('../raw/footprints.json', import.meta.url)));
+const parkTrees = JSON.parse(await readFile(new URL('../raw/trees.json', import.meta.url)));
 
 const lat0 = (BBOX.minLat + BBOX.maxLat) / 2;
 const lon0 = (BBOX.minLon + BBOX.maxLon) / 2;
@@ -39,7 +41,6 @@ const distToPark = (pt) => {
 };
 const near = (pt, m) => distToPark(pt) <= m;
 const closed = (pts) => pts.length > 3 && pts[0][0] === pts.at(-1)[0] && pts[0][1] === pts.at(-1)[1];
-const heightOf = (t) => (t['building:levels'] ? +t['building:levels'] * 3.2 : t.height ? parseFloat(t.height) : 12) || 12;
 // Split a polyline into runs that lie inside (or within 10 m of) the park.
 const clipRuns = (pts) => {
   const runs = []; let cur = [];
@@ -68,9 +69,6 @@ for (const e of inside) {
     if (t.footway === 'sidewalk' || t.footway === 'crossing' || (t.highway === 'service' && t.service === 'driveway')) continue;
     const kind = WALK.includes(t.highway) ? 'paths' : 'roads';
     for (const run of clipRuns(pts)) world[kind].push({ t: t.highway, b: t.bridge ? 1 : 0, u: t.tunnel ? 1 : 0, p: run });
-  } else if (t.building) {
-    if (inPark(pts[0])) world.buildings.push({ h: heightOf(t), p: pts });
-    else if (near(pts[0], SKYLINE_M)) world.skyline.push({ h: heightOf(t), p: pts });
   } else if (pts.some(inPark)) {
     if (t.natural === 'water') closed(pts) && world.water.push(pts);
     else if (t.natural === 'wood' || t.natural === 'scrub') world.woods.push(pts);
@@ -80,6 +78,39 @@ for (const e of inside) {
     else if (t.leisure === 'garden') world.gardens.push(pts);
   }
 }
+
+// Buildings: NYC Building Footprints with surveyed roof heights (feet). Inside the park -> buildings; within 250 m -> skyline.
+let noHeight = 0;
+for (const f of footprints) {
+  const ft = parseFloat(f.height_roof);
+  if (!(ft > 0)) noHeight++;
+  const h = ft > 0 ? Math.round(ft * 0.3048 * 10) / 10 : 10; // unknown heights get 10 m and are counted below
+  for (const poly of f.the_geom?.coordinates ?? []) {
+    const ring = poly[0].map(([lon, lat]) => proj({ lat, lon }));
+    if (ring.length < 4) continue;
+    if (inPark(ring[0])) world.buildings.push({ h, p: ring });
+    else if (near(ring[0], SKYLINE_M)) world.skyline.push({ h, p: ring });
+  }
+}
+console.log(`footprints ${footprints.length}, without roof height ${noHeight} (drawn at 10 m)`);
+
+// Trees: NYC Parks Forestry points (street trees around the park; only a few dozen inside it) carry trunk diameter (inches).
+// OSM trees inside the park have no size (0). An NYC point replaces an OSM tree within 3 m.
+const cell = (x, z) => `${Math.round(x / 3)},${Math.round(z / 3)}`;
+const osmGrid = new Map(world.trees.map((t, i) => [cell(t[0], t[1]), i]));
+world.trees = world.trees.map(([x, z]) => [x, z, 0]);
+let nycTrees = 0;
+for (const r of parkTrees) {
+  const c = r.location?.coordinates;
+  if (!c) continue;
+  const [x, z] = proj({ lat: c[1], lon: c[0] });
+  const dbh = Math.max(0, parseFloat(r.dbh) || 0);
+  const dup = osmGrid.get(cell(x, z));
+  if (dup !== undefined) { world.trees[dup][2] = dbh; continue; }
+  world.trees.push([x, z, dbh]);
+  nycTrees++;
+}
+console.log(`trees: ${world.trees.length} (${nycTrees} from NYC Parks added)`);
 
 // Entrances: the Conservancy's 20 named gates, placed by the best source available for each:
 //  1. street junction (the two named streets meet), snapped to the official boundary; or

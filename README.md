@@ -48,7 +48,10 @@ The product is visiting a real place, so real-world elements must come from an a
 |---|---|---|
 | Boundary | NYC Parks "Parks Properties" (M010) | official |
 | Terrain | NYC 1 m LiDAR DEM (2017) | official, 8 m grid in the client |
-| Paths, roads, lawns, water, woods, buildings | OpenStreetMap | community data, not yet audited |
+| Paths, roads, lawns, water, woods | OpenStreetMap | community data, not yet audited |
+| Buildings | NYC Building Footprints (`5zhs-2jue`), roof height in feet converted to metres | official; 15 of 11,268 have no height and are drawn at 10 m |
+| Street trees | NYC Parks Forestry Tree Points (`hn5i-inap`), size scaled from trunk diameter | official locations; height and crown are a rule of thumb, not measured |
+| Trees inside the park | OpenStreetMap points | locations only, size unknown (NYC Parks has just 96 trees inside the park) |
 | Gates | Conservancy list of 20 named gates; positions from OSM street junctions and the Conservancy's map pins | 20 placed, 17 verified against a second source, 3 from the Conservancy pin alone (see docs/research.md section 9) |
 
 ## Which LLM for what

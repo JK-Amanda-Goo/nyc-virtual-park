@@ -28,7 +28,9 @@ Official boundary, LiDAR terrain (map texture and walking height), 6 OSM-named g
 ## Known gaps
 - 20 of 20 gates placed; 17 verified, 3 on the Conservancy pin alone (see research.md section 9).
 - Bridges and tunnels sit on the terrain surface (no height separation).
-- Tree count (OSM) is far below reality; building heights default to 12 m when untagged.
+- Buildings now use NYC footprints with real roof heights (15 of 11,268 lack a height, drawn at 10 m).
+- Street trees (23,419) come from NYC Parks. Trees inside the park are still OSM points with unknown size; the only individual-tree dataset found is the TNC 2021 crown data (2.0 GB, CC BY-NC-SA, non-commercial), not downloaded pending a licence decision.
+- Tree height and crown size are scaled from trunk diameter by a rule of thumb, not measured.
 
 ## Older gaps (before the fidelity work)
 - 74 entrance candidates (every path crossing the outline), unnamed; needs curating to the real gates.

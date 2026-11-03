@@ -72,8 +72,8 @@ Principle: every real-world element must come from an authoritative source and c
 | Park boundary | 4-corner approximation | NYC Open Data "Parks Properties" (`enfh-gkve`, NYC Parks): Central Park is `gispropnum=M010`, Flagship Park, 840.01 acres, polygon in the `multipolygon` column. Verified by querying the API. |
 | Terrain | Flat (wrong; the park has hills) | NYC Topobathymetric LiDAR DEM 2017, 1 m, served by NY State (`elevation.its.ny.gov/.../NYC_TopoBathymetric_2017_1_meter/ImageServer`). Also USGS 3DEP ImageServer. |
 | Entrances | 74 auto-generated candidates (not real) | Conservancy: 20 original named gates, 19 exist today (Fisherman's never built; Explorers' renamed Pioneers'). OSM has about 10 of them with coordinates. The rest need locating. Unnamed pedestrian entrances: no authoritative count found. |
-| Trees | 1,607 from OSM | Not resolved; NYC Parks has a street-tree census but it covers street trees, so check whether park trees are included. |
-| Building heights | Default 12 m when untagged | Not resolved; NYC building footprints dataset has heights. |
+| Trees | 1,607 from OSM, plus 23,419 NYC Parks street trees (2026-11-03) | Street trees: NYC Parks Forestry Tree Points (`hn5i-inap`, with trunk diameter). Inside the park the dataset has only 96 trees, so park trees stay OSM points of unknown size. Only individual-tree source found: TNC 2021 crown data (2.0 GB, CC BY-NC-SA 4.0, non-commercial), not downloaded. |
+| Building heights | NYC footprints with roof heights (2026-11-03) | NYC Building Footprints (`5zhs-2jue`): 11,268 footprints, 15 without a height (drawn at 10 m). |
 
 Elevation spot check (metres, two independent services agree to within about 0.4 m, values plausible):
 
