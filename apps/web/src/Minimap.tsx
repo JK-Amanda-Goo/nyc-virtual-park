@@ -4,13 +4,14 @@ import type { PlayerState } from './player';
 import type { Terrain } from './terrain';
 import { paintGround } from './groundTexture';
 import { theme } from './theme';
+import { parkAxis } from './parkAxis';
 
 const HEIGHT = 380; // CSS pixels tall
 const MARGIN_M = 150; // around the official boundary
 const ZOOM_STEP = 1.6, MAX_ZOOM = 8; // zoom 1 = the entire park
 const MAX_BASE_PX = 25e6; // keep the prebuilt map image a sane size
 
-/** North-up map of the park with you on it. Zoomed in, it follows you. */
+/** Map of the park standing upright with you on it; zoomed in, it follows you. */
 export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Terrain; player: React.RefObject<PlayerState> }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const level = useRef(1);
@@ -36,20 +37,22 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     return { c, s };
   }, [data, terrain]);
 
-  // The official boundary's extent plus a margin.
-  const bounds = useMemo(() => {
-    const pts = data.boundary.flat();
-    const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
-    const x0 = Math.min(...xs) - MARGIN_M, x1 = Math.max(...xs) + MARGIN_M;
-    const z0 = Math.min(...zs) - MARGIN_M, z1 = Math.max(...zs) + MARGIN_M;
-    return { x0, z0, w: x1 - x0, h: z1 - z0 };
+  // The park stands upright: its long axis points up the screen, like the pick-an-entrance map.
+  // `along` runs up the screen, `side` to the right; the extent is the official boundary plus a margin.
+  const frame = useMemo(() => {
+    const { x: ax, z: az } = parkAxis(data);
+    const sx = -az, sz = ax; // screen-right
+    const along = data.boundary.flat().map(([x, z]) => x * ax + z * az), side = data.boundary.flat().map(([x, z]) => x * sx + z * sz);
+    const a0 = Math.min(...along) - MARGIN_M, a1 = Math.max(...along) + MARGIN_M;
+    const s0 = Math.min(...side) - MARGIN_M, s1 = Math.max(...side) + MARGIN_M;
+    return { ax, az, sx, sz, a0, a1, s0, s1, angle: Math.atan2(-ax, -az) }; // angle: canvas rotation that puts the axis up
   }, [data]);
 
   useEffect(() => {
     const cv = ref.current!;
     const dpr = window.devicePixelRatio || 1;
     const g = cv.getContext('2d')!;
-    const width = Math.round(HEIGHT * bounds.w / bounds.h);
+    const width = Math.round(HEIGHT * (frame.s1 - frame.s0) / (frame.a1 - frame.a0));
     let raf = 0, last = 0, shown = false;
     cv.style.width = width + 'px'; cv.style.height = HEIGHT + 'px';
     cv.width = width * dpr; cv.height = HEIGHT * dpr;
@@ -63,35 +66,39 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
       g.stroke(); g.fill();
       g.restore();
     };
-    const dots = (toXY: (e: { x: number; z: number }) => [number, number], maxR: number) => {
-      for (const e of data.entrances) {
-        const [dx, dz] = toXY(e);
-        if (Math.hypot(dx, dz) > maxR) continue;
-        g.fillStyle = e.verified ? theme.marker : theme.markerHover;
-        g.strokeStyle = '#fff'; g.lineWidth = 1.5 * dpr;
-        g.beginPath(); g.arc(dx, dz, 4 * dpr, 0, Math.PI * 2); g.fill(); g.stroke();
-      }
-    };
-
     const drawMap = (p: PlayerState) => {
-      const { c, s } = base, fz = level.current, w = bounds.w / fz, h = bounds.h / fz, k = cv.width / w; // k: device pixels per metre
+      const { c } = base, fz = level.current, { ax, az, sx, sz, a0, a1, s0, s1, angle } = frame;
+      const ws = (s1 - s0) / fz, ha = (a1 - a0) / fz, k = cv.width / ws; // k: device pixels per metre
       // Zoomed in, the window follows the player but never leaves the park's extent.
-      const x0 = Math.min(bounds.x0 + bounds.w - w, Math.max(bounds.x0, p.x - w / 2));
-      const z0 = Math.min(bounds.z0 + bounds.h - h, Math.max(bounds.z0, p.z - h / 2));
+      const cs = Math.min(s1 - ws / 2, Math.max(s0 + ws / 2, p.x * sx + p.z * sz));
+      const ca = Math.min(a1 - ha / 2, Math.max(a0 + ha / 2, p.x * ax + p.z * az));
+      const cx = cs * sx + ca * ax, cz = cs * sz + ca * az; // world point at the middle of the map
       g.fillStyle = theme.city; g.fillRect(0, 0, cv.width, cv.height);
-      g.drawImage(c, (x0 - terrain.minX) * s, (z0 - terrain.minZ) * s, w * s, h * s, 0, 0, cv.width, cv.height);
       g.save();
-      g.translate(-x0 * k, -z0 * k);
-      dots((e) => [e.x * k, e.z * k], Infinity);
+      g.translate(cv.width / 2, cv.height / 2); g.rotate(angle); g.scale(k, k); g.translate(-cx, -cz);
+      g.drawImage(c, terrain.minX, terrain.minZ, terrain.maxX - terrain.minX, terrain.maxZ - terrain.minZ);
+      for (const e of data.entrances) {
+        g.fillStyle = e.verified ? theme.marker : theme.markerHover;
+        g.strokeStyle = '#fff'; g.lineWidth = 1.5 * dpr / k;
+        g.beginPath(); g.arc(e.x, e.z, 4 * dpr / k, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
       g.restore();
-      // The camera's field of view as a wedge, so turning the camera shows up live. North is up, so its angle is -view.
-      const px = (p.x - x0) * k, pz = (p.z - z0) * k, reach = 46 * dpr, half = 0.66; // about 76 degrees wide
+
+      // You, in screen space: the map is turned by `angle`, so are the directions.
+      const dx = p.x - cx, dz = p.z - cz;
+      const px = cv.width / 2 + k * (dx * Math.cos(angle) - dz * Math.sin(angle)), pz = cv.height / 2 + k * (dx * Math.sin(angle) + dz * Math.cos(angle));
+      // The camera's field of view as a wedge, so turning the camera shows up live.
+      const reach = 46 * dpr, half = 0.66; // about 76 degrees wide
       g.fillStyle = 'rgba(43,102,217,.28)';
-      g.beginPath(); g.moveTo(px, pz); g.arc(px, pz, reach, -Math.PI / 2 - p.view - half, -Math.PI / 2 - p.view + half); g.closePath(); g.fill();
-      // North is up, so the arrow turns by the character's heading alone.
-      arrow((p.x - x0) * k, (p.z - z0) * k, -p.heading);
-      g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'left'; g.textBaseline = 'top';
-      g.fillText('N ↑', 8 * dpr, 6 * dpr);
+      g.beginPath(); g.moveTo(px, pz); g.arc(px, pz, reach, -Math.PI / 2 + angle - p.view - half, -Math.PI / 2 + angle - p.view + half); g.closePath(); g.fill();
+      arrow(px, pz, angle - p.heading);
+
+      // Compass: real north, which is no longer straight up.
+      const ox = 26 * dpr, oy = 28 * dpr, nx = ox + Math.sin(angle) * 16 * dpr, ny = oy - Math.cos(angle) * 16 * dpr;
+      g.strokeStyle = '#222'; g.lineWidth = 2 * dpr;
+      g.beginPath(); g.moveTo(ox, oy); g.lineTo(nx, ny); g.stroke();
+      g.fillStyle = '#222'; g.font = `bold ${12 * dpr}px sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('N', ox + Math.sin(angle) * 26 * dpr, oy - Math.cos(angle) * 26 * dpr);
     };
 
     const draw = (now: number) => {
@@ -106,7 +113,7 @@ export function Minimap({ data, terrain, player }: { data: ParkData; terrain: Te
     };
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [base, bounds, data, terrain, player]);
+  }, [base, frame, data, terrain, player]);
 
   const btn: React.CSSProperties = { width: 32, height: 32, border: 'none', borderRadius: 6, background: 'rgba(255,255,255,.9)', boxShadow: '0 1px 4px rgba(0,0,0,.3)', fontSize: 20, lineHeight: '30px', cursor: 'pointer', padding: 0 };
   return (

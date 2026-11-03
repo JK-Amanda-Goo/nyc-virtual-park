@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import type { Entrance, ParkData } from './types';
 import { LOOK_Y, type PlayerState } from './player';
 import type { Terrain } from './terrain';
+import { parkAxis } from './parkAxis';
 
 const FLIGHT_SECONDS = 3;
 const WALK = 1.4, RUN = 4.2;
@@ -20,14 +21,9 @@ export function CameraRig({ data, entrance, player, terrain }: { data: ParkData;
   // Map pose: straight down, with the park's long axis pointing up the screen.
   const mapPose = useRef(makePose());
   useEffect(() => {
-    // Long axis of the official outline (principal component of the largest part), oriented northward.
-    const ring = data.boundary.reduce((m, r) => (r.length > m.length ? r : m));
-    const mx = ring.reduce((a, p) => a + p[0], 0) / ring.length, mz = ring.reduce((a, p) => a + p[1], 0) / ring.length;
-    let cxx = 0, czz = 0, cxz = 0;
-    for (const [x, z] of ring) { cxx += (x - mx) ** 2; czz += (z - mz) ** 2; cxz += (x - mx) * (z - mz); }
-    const theta = 0.5 * Math.atan2(2 * cxz, cxx - czz);
-    const axis = new THREE.Vector3(Math.cos(theta), 0, Math.sin(theta));
-    if (axis.z > 0) axis.negate();
+    // Long axis of the official outline, oriented northward.
+    const { x: ax, z: az, ring } = parkAxis(data);
+    const axis = new THREE.Vector3(ax, 0, az);
     const across = new THREE.Vector3(-axis.z, 0, axis.x);
     const along = ring.map(([x, z]) => x * axis.x + z * axis.z), side = ring.map(([x, z]) => x * across.x + z * across.z);
     const [a0, a1, s0, s1] = [Math.min(...along), Math.max(...along), Math.min(...side), Math.max(...side)];
