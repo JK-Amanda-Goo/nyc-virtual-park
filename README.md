@@ -54,6 +54,12 @@ The product is visiting a real place, so real-world elements must come from an a
 | Trees inside the park | OpenStreetMap points | locations only, size unknown (NYC Parks has just 96 trees inside the park) |
 | Gates | Conservancy list of 20 named gates; positions from OSM street junctions and the Conservancy's map pins | 20 placed, 17 verified against a second source, 3 from the Conservancy pin alone (see docs/research.md section 9) |
 
+## Data credits
+
+- Map data (paths, roads, lawns, water, woods, park trees): © OpenStreetMap contributors, available under the [Open Database Licence (ODbL)](https://www.openstreetmap.org/copyright).
+- Park boundary: NYC Parks, Parks Properties. Terrain: NYC 1 m LiDAR DEM (2017). Buildings: NYC Building Footprints. Street trees: NYC Parks Forestry Tree Points. All from NYC Open Data.
+- Gate names and locations: Central Park Conservancy's list and map.
+
 ## Which LLM for what
 
 Short version (details in the research doc): Google's Maps/3D Tiles are an **API, not an LLM**, so choosing a model doesn't change how the map data gets in. For building this, use **one strong coding model for the code** and consider **Gemini only for generating textures/concept art** if wanted. No LLM is needed at runtime in v1.
