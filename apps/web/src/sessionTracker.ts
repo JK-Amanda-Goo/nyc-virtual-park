@@ -45,7 +45,7 @@ export function trackSession(opts: {
   const send = (fn: () => PromiseLike<unknown>) => { queue = queue.then(() => fn()).then(() => {}, () => {}); };
 
   const logEvent = (id: string, kind: 'sit' | 'lie' | 'blanket_lay' | 'blanket_pickup', x: number, z: number, end: boolean, color: string | null) => {
-    const spot = onBlanket(blanket.current, x, z);
+    const spot = (kind === 'sit' || kind === 'lie') && onBlanket(blanket.current, x, z); // for blanket events it would be trivially true
     send(() => supabase.rpc('log_event', { p_id: id, p_session: session, p_kind: kind, p_x: x, p_z: z, p_on_blanket: spot, p_color: color, p_end: end }).then(warn('log_event')));
   };
   const ping = (end = false) => send(() => supabase.rpc('ping_session', {
