@@ -1,4 +1,6 @@
-// Character profile, saved only in this browser for now. Later it moves to the account (Supabase).
+// Character profile, saved to the account (Supabase). A profile saved in this browser before accounts existed is only used to prefill the first-time form.
+import { supabase } from './supabase';
+
 export type Profile = { nickname: string; skin: string; top: string };
 
 export const SKIN_TONES = ['#f6d9bf', '#e8b98f', '#d9a074', '#b97f57', '#8d5a3b', '#5e3b26'];
@@ -47,6 +49,14 @@ export function loadProfile(): Profile | null {
   } catch { return null; }
 }
 
-export function saveProfile(p: Profile) {
-  try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* private window or blocked storage: the profile just won't persist */ }
+/** The signed-in account's profile, or null when none has been saved yet. */
+export async function fetchProfile(): Promise<Profile | null> {
+  const { data, error } = await supabase.from('profiles').select('nickname, skin_color, top_color').maybeSingle();
+  if (error) throw error;
+  return data && { nickname: data.nickname, skin: data.skin_color, top: data.top_color };
+}
+
+export async function storeProfile(userId: string, p: Profile) {
+  const { error } = await supabase.from('profiles').upsert({ user_id: userId, nickname: p.nickname, skin_color: p.skin, top_color: p.top, updated_at: new Date().toISOString() });
+  if (error) throw error;
 }

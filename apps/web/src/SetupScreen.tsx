@@ -29,7 +29,7 @@ function Swatches({ label, colors, value, onChange }: { label: string; colors: s
 }
 
 /** Pick a nickname, skin tone and clothes colours before entering the park. */
-export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | null; onDone: (p: Profile) => void; onCancel?: () => void }) {
+export function SetupScreen({ initial, error, onDone, onCancel }: { initial: Profile | null; error?: string; onDone: (p: Profile) => void | Promise<void>; onCancel?: () => void }) {
   const [p, setP] = useState<Profile>(initial ?? DEFAULT_PROFILE);
   const preview = useRef(makePlayer());
   const [suggestion, setSuggestion] = useState(suggestNickname);
@@ -64,7 +64,7 @@ export function SetupScreen({ initial, onDone, onCancel }: { initial: Profile | 
           <button type="submit" disabled={!ok} style={{ padding: '8px 16px', fontSize: 15 }}>{initial ? 'Save' : 'Enter the park'}</button>
           {onCancel && <button type="button" onClick={onCancel} style={{ padding: '8px 16px', fontSize: 15 }}>Cancel</button>}
         </div>
-        <small style={{ color: '#666' }}>Saved in this browser only. Sign-up comes later.</small>
+        {error && <div role="alert" style={{ color: '#b00020' }}>Could not save: {error}</div>}
       </form>
     </div>
   );
