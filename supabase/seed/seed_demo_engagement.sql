@@ -1,4 +1,5 @@
--- Demo data for the hackathon: 30 made-up visitors with profiles, visits and events.
+-- Demo data for the hackathon: 300 made-up visitors with profiles, visits and events.
+-- (It was run in two parts: users 1 to 30, then 31 to 300. To run it again, delete the old ones first, see below.)
 -- Their emails end in @seed.chillspot.invalid, so they can be told apart (and deleted) later:
 --   delete from auth.users where email like '%@seed.chillspot.invalid';  -- cascades to everything below
 do $$
@@ -10,20 +11,22 @@ declare
   cols  text[] := array['#e4572e','#f2a541','#f6d55c','#5aa469','#3caea3','#4a7fc1','#9b72cf','#e98fb0'];
   lat0 constant double precision := 40.78234519881016;
   lon0 constant double precision := -73.96595165520367;
+  first_user constant int := 1;
+  last_user  constant int := 300;
   gates_n int; i int; j int; k int; u uuid; s uuid;
   gate record; entered timestamptz; dur int; nbl int; blx real; blz real; sx real; sz real; t real;
   t_ev timestamptz; ev_len int; on_bl boolean; ex real; ez real; color text; lay_at timestamptz;
 begin
   select count(*) into gates_n from public.gates;
-  for i in 1..30 loop
+  for i in first_user..last_user loop
     u := gen_random_uuid();
     insert into auth.users (instance_id, id, aud, role, email, email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
                             created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change)
     values ('00000000-0000-0000-0000-000000000000', u, 'authenticated', 'authenticated',
-            format('seed%s@seed.chillspot.invalid', lpad(i::text, 2, '0')), now(),
+            format('seed%s@seed.chillspot.invalid', lpad(i::text, 3, '0')), now(),
             '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '');
     insert into public.profiles (user_id, nickname, skin_color, top_color)
-    values (u, adj[i] || noun[((i * 7) % 30) + 1], skins[1 + floor(random() * 10)::int], tops[1 + floor(random() * 8)::int]);
+    values (u, adj[1 + (i - 1) % 30] || noun[1 + ((i - 1) * 7 + (i - 1) / 30) % 30], skins[1 + floor(random() * 10)::int], tops[1 + floor(random() * 8)::int]);
 
     for j in 1..(1 + floor(random() * 4)::int) loop            -- 1 to 4 visits in the last 5 days
       select * into gate from public.gates order by id offset floor(power(random(), 1.8) * gates_n)::int limit 1;
