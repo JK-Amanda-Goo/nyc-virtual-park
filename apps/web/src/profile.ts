@@ -57,6 +57,6 @@ export async function fetchProfile(): Promise<Profile | null> {
 }
 
 export async function storeProfile(userId: string, p: Profile) {
-  const { error } = await supabase.from('profiles').upsert({ user_id: userId, nickname: p.nickname, skin_color: p.skin, top_color: p.top, updated_at: new Date().toISOString() });
+  const { error } = await supabase.from('profiles').upsert({ user_id: userId, nickname: p.nickname, skin_color: p.skin, top_color: p.top });
   if (error) throw error;
 }
