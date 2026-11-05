@@ -1,5 +1,5 @@
--- Demo data for the hackathon: 300 made-up visitors with profiles, visits and events.
--- (It was run in two parts: users 1 to 30, then 31 to 300. To run it again, delete the old ones first, see below.)
+-- Demo data for the hackathon: 600 made-up visitors with profiles, visits and events.
+-- (It was run in three parts: users 1 to 30, 31 to 300, then 301 to 600. To run it again, delete the old ones first, see below.)
 -- Their emails end in @seed.chillspot.invalid, so they can be told apart (and deleted) later:
 --   delete from auth.users where email like '%@seed.chillspot.invalid';  -- cascades to everything below
 do $$
@@ -11,8 +11,8 @@ declare
   cols  text[] := array['#e4572e','#f2a541','#f6d55c','#5aa469','#3caea3','#4a7fc1','#9b72cf','#e98fb0'];
   lat0 constant double precision := 40.78234519881016;
   lon0 constant double precision := -73.96595165520367;
-  first_user constant int := 1;
-  last_user  constant int := 300;
+  first_user constant int := 301;
+  last_user  constant int := 600;
   gates_n int; i int; j int; k int; u uuid; s uuid;
   gate record; entered timestamptz; dur int; nbl int; blx real; blz real; sx real; sz real; t real;
   t_ev timestamptz; ev_len int; on_bl boolean; ex real; ez real; color text; lay_at timestamptz;

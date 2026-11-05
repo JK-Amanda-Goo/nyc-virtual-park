@@ -1,5 +1,7 @@
 # nyc-virtual-park
 
+![Three people sitting on blankets in Central Park, with the minimap and the "3 people in the park" list](docs/images/screenshot-park.png)
+
 A multiplayer 3D place where people sign up and spend time in random areas of New York City. **v1 is Central Park.**
 
 > Status: **M0 to M2 done (data pipeline, map to eye level, character with sit and lie down), plus a minimap and a client-only blanket, all with placeholder colors.** Next: M3 (sign-up and character setup). See [`CHANGELOG.md`](CHANGELOG.md) for what changed, [`docs/research.md`](docs/research.md) for findings and [`docs/plan.md`](docs/plan.md) for the minimal-scope build plan.
